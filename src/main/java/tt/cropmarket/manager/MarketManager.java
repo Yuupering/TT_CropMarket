@@ -31,6 +31,11 @@ public class MarketManager {
             return SellResult.fail("이 등급은 설정되지 않았습니다.");
         }
 
+        // 붕괴 상태 체크 (가격 0 → 거래 불가)
+        if (data.getCurrentPrice() <= 0) {
+            return SellResult.fail("시장이 붕괴된 상태입니다. 복구될 때까지 거래할 수 없습니다.");
+        }
+
         // 세금 계산
         ConfigManager cfg = plugin.getConfigManager();
 
