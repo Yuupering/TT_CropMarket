@@ -3,7 +3,7 @@ version: ${version}
 main: tt.cropmarket.CropMarketPlugin
 api-version: '1.20'
 description: 판매량에 따라 가격이 변동하는 동적 농산물 시장
-authors: [ Author ]
+authors: [ Yuupe ]
 
 depend:
   - Vault
