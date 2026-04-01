@@ -4,6 +4,7 @@ import tt.cropmarket.CropMarketPlugin;
 import tt.cropmarket.gui.CropSellGUI;
 import tt.cropmarket.gui.MainMenuGUI;
 import tt.cropmarket.gui.MarketGUI;
+import tt.cropmarket.gui.SeedBuyGUI;
 import tt.cropmarket.gui.SeedShopGUI;
 import tt.cropmarket.manager.MarketManager.SellResult;
 import tt.cropmarket.model.CropEntry;
@@ -23,6 +24,7 @@ public class GUIListener implements Listener {
 
     private final CropMarketPlugin plugin;
     private final Map<UUID, CropEntry> activeSellCrop = new HashMap<>();
+    private final Map<UUID, CropEntry> activeBuyCrop  = new HashMap<>();
     private final Map<UUID, Integer>   compassPage    = new HashMap<>();
 
     public GUIListener(CropMarketPlugin plugin) {
@@ -44,6 +46,10 @@ public class GUIListener implements Listener {
             event.setCancelled(true);
             plugin.getSeedShopGUI().handleBuy(player, event.getSlot());
 
+        } else if (title.startsWith(SeedBuyGUI.TITLE_PREFIX) && title.endsWith(SeedBuyGUI.TITLE_SUFFIX)) {
+            event.setCancelled(true);
+            handleSeedBuyClick(player, event.getSlot(), title);
+
         } else if (title.equals(MarketGUI.TITLE)) {
             event.setCancelled(true);
             handleMarketClick(player, event.getSlot());
@@ -54,12 +60,35 @@ public class GUIListener implements Listener {
         }
     }
 
+    // ──────────────────────────────────────────
+    //  씨앗 세부 구매 GUI
+    // ──────────────────────────────────────────
+
+    private void handleSeedBuyClick(Player player, int slot, String title) {
+        CropEntry crop = activeBuyCrop.get(player.getUniqueId());
+        if (crop == null) {
+            String rawName = SeedBuyGUI.extractCropName(title);
+            for (CropEntry c : plugin.getConfigManager().getCrops()) {
+                if (c.getDisplayName().replaceAll("§[0-9a-fk-or]", "").equals(rawName)) {
+                    crop = c;
+                    break;
+                }
+            }
+            if (crop == null) return;
+            activeBuyCrop.put(player.getUniqueId(), crop);
+        }
+        plugin.getSeedBuyGUI().handleClick(player, slot, crop);
+    }
+
     @EventHandler
     public void onInventoryClose(InventoryCloseEvent event) {
         String title = event.getView().getTitle();
         UUID uuid = event.getPlayer().getUniqueId();
         if (title.equals(MarketGUI.TITLE) || (title.startsWith(CropSellGUI.TITLE_PREFIX) && title.endsWith(CropSellGUI.TITLE_SUFFIX))) {
             activeSellCrop.remove(uuid);
+        }
+        if (title.equals(SeedShopGUI.TITLE) || (title.startsWith(SeedBuyGUI.TITLE_PREFIX) && title.endsWith(SeedBuyGUI.TITLE_SUFFIX))) {
+            activeBuyCrop.remove(uuid);
         }
         // compassPage는 MainMenu로 완전히 나갔을 때만 초기화
         if (title.equals(MainMenuGUI.TITLE)) {

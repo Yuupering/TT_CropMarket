@@ -4,6 +4,7 @@ import tt.cropmarket.command.MarketCommand;
 import tt.cropmarket.gui.CropSellGUI;
 import tt.cropmarket.gui.MainMenuGUI;
 import tt.cropmarket.gui.MarketGUI;
+import tt.cropmarket.gui.SeedBuyGUI;
 import tt.cropmarket.gui.SeedShopGUI;
 import tt.cropmarket.listener.GUIListener;
 import tt.cropmarket.manager.ConfigManager;
@@ -28,6 +29,7 @@ public class CropMarketPlugin extends JavaPlugin {
     private MainMenuGUI       mainMenuGUI;
     private MarketGUI         marketGUI;
     private SeedShopGUI       seedShopGUI;
+    private SeedBuyGUI        seedBuyGUI;
     private CropSellGUI       cropSellGUI;
 
     @Override
@@ -49,6 +51,7 @@ public class CropMarketPlugin extends JavaPlugin {
         mainMenuGUI       = new MainMenuGUI(this);
         marketGUI         = new MarketGUI(this);
         seedShopGUI       = new SeedShopGUI(this);
+        seedBuyGUI        = new SeedBuyGUI(this);
         cropSellGUI       = new CropSellGUI(this);
 
         dataManager.load();
@@ -116,5 +119,6 @@ public class CropMarketPlugin extends JavaPlugin {
     public MainMenuGUI        getMainMenuGUI()        { return mainMenuGUI; }
     public MarketGUI          getMarketGUI()          { return marketGUI; }
     public SeedShopGUI        getSeedShopGUI()        { return seedShopGUI; }
+    public SeedBuyGUI         getSeedBuyGUI()         { return seedBuyGUI; }
     public CropSellGUI        getCropSellGUI()        { return cropSellGUI; }
 }

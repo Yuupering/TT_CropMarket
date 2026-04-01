@@ -11,7 +11,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -119,50 +118,8 @@ public class SeedShopGUI {
                 .filter(CropEntry::hasSeed).toList();
         if (index >= crops.size()) return;
 
-        CropEntry crop     = crops.get(index);
-        int       amount   = plugin.getConfigManager().getSeedBuyAmount();
-        double    cost     = crop.getSeedPrice() * amount;
-        double    balance  = plugin.getEconomy().getBalance(player);
-
-        if (balance < cost) {
-            player.sendMessage(String.format(
-                "§c[씨앗구매] 잔액이 부족합니다. 필요: §f%,.0f§c원  보유: §f%,.0f§c원",
-                cost, balance));
-            return;
-        }
-
-        // ItemsAdder 씨앗 지급
-        ItemStack seedItem;
-        try {
-            CustomStack cs = CustomStack.getInstance(crop.getSeedItemId());
-            if (cs == null) {
-                player.sendMessage("§c[씨앗구매] 씨앗 아이템을 찾을 수 없습니다: " + crop.getSeedItemId());
-                return;
-            }
-            seedItem = cs.getItemStack().clone();
-            seedItem.setAmount(amount);
-        } catch (Exception e) {
-            player.sendMessage("§c[씨앗구매] 씨앗 지급 중 오류가 발생했습니다.");
-            return;
-        }
-
-        // 인벤토리 공간 확인
-        HashMap<Integer, ItemStack> leftover = player.getInventory().addItem(seedItem);
-        if (!leftover.isEmpty()) {
-            // 인벤토리가 가득 찼으면 아이템 돌려놓기
-            leftover.values().forEach(i -> player.getInventory().removeItem(i));
-            player.sendMessage("§c[씨앗구매] 인벤토리가 가득 찼습니다.");
-            return;
-        }
-
-        plugin.getEconomy().withdrawPlayer(player, cost);
-
-        player.sendMessage(String.format(
-            "§a[씨앗구매] §f%s §7씨앗 %d개를 §c-%,.0f§7원에 구매했습니다.",
-            strip(crop.getDisplayName()), amount, cost));
-
-        // GUI 새로고침
-        Bukkit.getScheduler().runTask(plugin, () -> open(player));
+        CropEntry crop = crops.get(index);
+        plugin.getSeedBuyGUI().open(player, crop);
     }
 
     // ──────────────────────────────────────────
