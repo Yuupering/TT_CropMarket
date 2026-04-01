@@ -25,11 +25,12 @@
 
 | 플러그인 | 용도 | 필수 여부 |
 |----------|------|-----------|
-| [Vault](https://www.spigotmc.org/resources/vault.34315/) | 경제 시스템 연동 | 필수 |
-| [ItemsAdder](https://www.spigotmc.org/resources/itemsadder.73355/) | ItemsAdder 커스텀 아이템 사용 시 | 필수 |
-| [MMOItems](https://www.spigotmc.org/resources/mmoitems-premium.39267/) | MMOItems 커스텀 아이템 사용 시 | 필수 |
+| [Vault](https://www.spigotmc.org/resources/vault.34315/) | 경제 시스템 연동 | **필수** |
+| [ItemsAdder](https://www.spigotmc.org/resources/itemsadder.73355/) | ItemsAdder 커스텀 아이템 사용 시 | 권장 |
+| [MMOItems](https://www.spigotmc.org/resources/mmoitems-premium.39267/) | MMOItems 커스텀 아이템 사용 시 | 권장 |
 
-> 바닐라 아이템만 사용하는 경우에도 현재 plugin.yml 상 세 플러그인 모두 depend로 등록되어 있습니다.
+> ItemsAdder / MMOItems가 없어도 플러그인은 정상 작동합니다.
+> 해당 플러그인의 아이템을 config에서 사용할 경우에만 설치하면 됩니다.
 
 ---
 

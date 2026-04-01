@@ -201,7 +201,7 @@ public class MarketManager {
                     yield cs != null && cs.getNamespacedID().equals(config.getItemId());
                 }
             };
-        } catch (Exception e) {
+        } catch (Throwable e) {
             return false;
         }
     }

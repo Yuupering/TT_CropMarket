@@ -103,7 +103,7 @@ public class SeedShopGUI {
         try {
             CustomStack cs = CustomStack.getInstance(crop.getSeedItemId());
             display = (cs != null) ? cs.getItemStack().clone() : new ItemStack(Material.WHEAT_SEEDS);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             display = new ItemStack(Material.WHEAT_SEEDS);
         }
         display.setAmount(1);

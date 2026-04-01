@@ -142,7 +142,7 @@ public class MarketGUI {
                         yield item != null ? item.clone() : null;
                     }
                 };
-            } catch (Exception ignored) {}
+            } catch (Throwable ignored) {}
         }
         return new ItemStack(crop.getIcon());
     }

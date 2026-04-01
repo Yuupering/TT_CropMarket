@@ -94,7 +94,7 @@ public class MainMenuGUI {
             try {
                 ItemStack item = MMOItems.plugin.getItem(config.getMmoitemsType(), config.getItemId());
                 if (item != null) return item.clone();
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 // 폴백
             }
         }
@@ -120,7 +120,7 @@ public class MainMenuGUI {
             try {
                 ItemStack item = MMOItems.plugin.getItem(config.getMmoitemsType(), config.getItemId());
                 if (item != null) return item.clone();
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 // 폴백
             }
         }

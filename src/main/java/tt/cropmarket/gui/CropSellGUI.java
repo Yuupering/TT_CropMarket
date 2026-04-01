@@ -185,7 +185,7 @@ public class CropSellGUI {
                     yield item;
                 }
             };
-        } catch (Exception e) {
+        } catch (Throwable e) {
             return null;
         }
     }

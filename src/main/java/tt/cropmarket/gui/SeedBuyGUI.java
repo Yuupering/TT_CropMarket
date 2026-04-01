@@ -97,7 +97,7 @@ public class SeedBuyGUI {
             }
             seedItem = cs.getItemStack().clone();
             seedItem.setAmount(amount);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             player.sendMessage("§c[씨앗구매] 씨앗 지급 중 오류가 발생했습니다.");
             return;
         }
@@ -126,7 +126,7 @@ public class SeedBuyGUI {
         try {
             CustomStack cs = CustomStack.getInstance(crop.getSeedItemId());
             display = (cs != null) ? cs.getItemStack().clone() : new ItemStack(Material.WHEAT_SEEDS);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             display = new ItemStack(Material.WHEAT_SEEDS);
         }
         display.setAmount(1);
