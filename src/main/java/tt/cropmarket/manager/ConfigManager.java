@@ -35,6 +35,11 @@ public class ConfigManager {
     private double crashRecoverySilverMult;
     private double crashRecoveryGoldMult;
 
+    // 묶음 판매 수량
+    private int normalSellAmount;
+    private int silverSellAmount;
+    private int goldSellAmount;
+
     // 씨앗
     private double seedDefaultPrice;
     private int    seedBuyAmount;
@@ -83,6 +88,10 @@ public class ConfigManager {
         crashRecoveryNormalMult = cfg.getDouble("crash-recovery.normal-multiplier", 1.25);
         crashRecoverySilverMult = cfg.getDouble("crash-recovery.silver-multiplier", 2.0);
         crashRecoveryGoldMult   = cfg.getDouble("crash-recovery.gold-multiplier", 1.5);
+
+        normalSellAmount = cfg.getInt("sell-amount.normal", 64);
+        silverSellAmount = cfg.getInt("sell-amount.silver", 8);
+        goldSellAmount   = cfg.getInt("sell-amount.gold",   4);
 
         seedDefaultPrice = cfg.getDouble("seeds.default-price", 100.0);
         seedBuyAmount    = cfg.getInt("seeds.buy-amount", 64);
@@ -173,6 +182,15 @@ public class ConfigManager {
             case NORMAL -> crashRecoveryNormalMult;
             case SILVER -> crashRecoverySilverMult;
             case GOLD   -> crashRecoveryGoldMult;
+        };
+    }
+
+    /** 등급별 묶음 판매 수량 */
+    public int getSellAmount(ItemGrade grade) {
+        return switch (grade) {
+            case NORMAL -> normalSellAmount;
+            case SILVER -> silverSellAmount;
+            case GOLD   -> goldSellAmount;
         };
     }
 

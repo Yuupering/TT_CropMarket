@@ -30,7 +30,10 @@ public class MarketManager {
             return SellResult.fail("이 등급은 설정되지 않았습니다.");
         }
 
-        int required  = grade.getSellAmount();
+        // 세금 계산
+        ConfigManager cfg = plugin.getConfigManager();
+
+        int required  = cfg.getSellAmount(grade);
         int available = countItems(player, config);
 
         if (available < required) {
@@ -40,14 +43,12 @@ public class MarketManager {
         // 아이템 제거
         removeItems(player, config, required);
 
-        // 세금 계산
-        ConfigManager cfg = plugin.getConfigManager();
         double taxRate = (!cfg.getTaxReducedPermission().isEmpty()
                 && player.hasPermission(cfg.getTaxReducedPermission()))
                 ? cfg.getTaxReducedRate() / 100.0
                 : cfg.getTaxDefaultRate() / 100.0;
 
-        double grossPayment = data.getCurrentPrice() * grade.getSellAmount();
+        double grossPayment = data.getCurrentPrice() * cfg.getSellAmount(grade);
         double taxAmount    = Math.round(grossPayment * taxRate * 100.0) / 100.0;
         double netPayment   = grossPayment - taxAmount;
 

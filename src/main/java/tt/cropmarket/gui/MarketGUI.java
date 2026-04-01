@@ -132,7 +132,7 @@ public class MarketGUI {
             double trend   = data.getPriceTrend();
             String arrow   = trend > 0.5 ? "§a▲" : trend < -0.5 ? "§c▼" : "§7─";
 
-            lore.add(grade.getDisplayName() + " §7등급  [×" + grade.getSellAmount() + "]");
+            lore.add(grade.getDisplayName() + " §7등급  [×" + plugin.getConfigManager().getSellAmount(grade) + "]");
             lore.add("  §7현재가: " + grade.getColorCode()
                     + String.format("%,.0f", current) + "§7원  " + arrow);
         }

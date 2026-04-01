@@ -79,15 +79,16 @@ public class CropSellGUI {
             return;
         }
 
-        int available = plugin.getMarketManager().countItems(player, config);
-        int canSell   = available / grade.getSellAmount();
+        int sellAmount = plugin.getConfigManager().getSellAmount(grade);
+        int available  = plugin.getMarketManager().countItems(player, config);
+        int canSell    = available / sellAmount;
 
-        inv.setItem(iconSlot, buildGradeIcon(grade, config, data, available, canSell));
-        inv.setItem(sellSlot, buildSellButton(player, grade, data, canSell));
+        inv.setItem(iconSlot, buildGradeIcon(grade, config, data, available, canSell, sellAmount));
+        inv.setItem(sellSlot, buildSellButton(player, grade, data, canSell, sellAmount));
     }
 
     private ItemStack buildGradeIcon(ItemGrade grade, GradeConfig config,
-                                     GradeData data, int available, int canSell) {
+                                     GradeData data, int available, int canSell, int sellAmount) {
         // 등급별 아이템 가져오기
         ItemStack display = getGradeItem(config);
         if (display == null) {
@@ -109,7 +110,7 @@ public class CropSellGUI {
 
         List<String> lore = new ArrayList<>();
         lore.add("§8──────────────");
-        lore.add("§7판매 단위: §f" + grade.getSellAmount() + "개");
+        lore.add("§7판매 단위: §f" + sellAmount + "개");
         lore.add("§7현재 가격: " + grade.getColorCode()
                 + String.format("%,.0f", current) + "§7원");
         lore.add("§7기준가 대비: §f" + String.format("%.1f", pct) + "%");
@@ -129,7 +130,7 @@ public class CropSellGUI {
         return display;
     }
 
-    private ItemStack buildSellButton(Player player, ItemGrade grade, GradeData data, int canSell) {
+    private ItemStack buildSellButton(Player player, ItemGrade grade, GradeData data, int canSell, int sellAmount) {
         boolean enough = canSell > 0;
         Material mat   = enough ? Material.EMERALD : Material.COAL;
         String   name  = enough ? "§a판매하기" : "§c아이템 부족";
@@ -141,13 +142,13 @@ public class CropSellGUI {
                 ? cfg.getTaxReducedRate() / 100.0
                 : cfg.getTaxDefaultRate() / 100.0;
 
-        double gross  = data.getCurrentPrice() * grade.getSellAmount();
+        double gross  = data.getCurrentPrice() * sellAmount;
         double tax    = Math.round(gross * taxRate * 100.0) / 100.0;
         double net    = gross - tax;
         int    taxPct = (int) Math.round(taxRate * 100);
 
         List<String> lore = new ArrayList<>();
-        lore.add("§7판매 수량: §f" + grade.getSellAmount() + "개");
+        lore.add("§7판매 수량: §f" + sellAmount + "개");
         lore.add("§7판매가:   §f" + String.format("%,.0f", gross) + "§7원");
         lore.add("§7세율:     §c" + taxPct + "%  §8(-" + String.format("%,.0f", tax) + "원)");
         lore.add("§7실수령:   §a+" + String.format("%,.0f", net) + "§7원");
