@@ -55,11 +55,8 @@ public class SeedShopGUI {
         List<CropEntry> crops = plugin.getConfigManager().getCrops().stream()
                 .filter(CropEntry::hasSeed).toList();
 
-        int buyAmount = plugin.getConfigManager().getSeedBuyAmount();
-
         for (int i = 0; i < Math.min(crops.size(), SEED_SLOTS.size()); i++) {
-            CropEntry crop = crops.get(i);
-            inv.setItem(SEED_SLOTS.get(i), buildSeedItem(player, crop, buyAmount));
+            inv.setItem(SEED_SLOTS.get(i), buildSeedItem(player, crops.get(i)));
         }
 
         // 뒤로가기 버튼
@@ -68,8 +65,7 @@ public class SeedShopGUI {
         player.openInventory(inv);
     }
 
-    private ItemStack buildSeedItem(Player player, CropEntry crop, int buyAmount) {
-        // ItemsAdder 아이템 표시 시도, 실패 시 WHEAT_SEEDS
+    private ItemStack buildSeedItem(Player player, CropEntry crop) {
         ItemStack display;
         try {
             CustomStack cs = CustomStack.getInstance(crop.getSeedItemId());
@@ -80,22 +76,22 @@ public class SeedShopGUI {
         display.setAmount(1);
 
         double pricePerSeed = crop.getSeedPrice();
-        double totalCost    = pricePerSeed * buyAmount;
-        double balance      = plugin.getEconomy().getBalance(player);
-        boolean canAfford   = balance >= totalCost;
+        int[]  amounts      = plugin.getConfigManager().getSeedBuyAmounts();
 
         ItemMeta meta = display.getItemMeta();
         meta.setDisplayName("§a" + strip(crop.getDisplayName()) + " §f씨앗");
 
         List<String> lore = new ArrayList<>();
-        lore.add("§8──────────────");
+        lore.add("§8────────────────────");
         lore.add("§7개당 가격: §f" + String.format("%,.0f", pricePerSeed) + "§7원");
-        lore.add("§7구매 수량: §f" + buyAmount + "개");
-        lore.add("§7총 비용:   " + (canAfford ? "§a" : "§c") + String.format("%,.0f", totalCost) + "§7원");
-        lore.add("§8──────────────");
-        lore.add("§7보유 잔액: §f" + String.format("%,.0f", balance) + "§7원");
-        lore.add("");
-        lore.add(canAfford ? "§a» 클릭하여 구매" : "§c» 잔액 부족");
+        StringBuilder amtLine = new StringBuilder("§7구매 수량: ");
+        for (int i = 0; i < amounts.length; i++) {
+            if (i > 0) amtLine.append("§8 / ");
+            amtLine.append("§f").append(amounts[i]).append("§7개");
+        }
+        lore.add(amtLine.toString());
+        lore.add("§8────────────────────");
+        lore.add("§a» 클릭하여 수량 선택");
         meta.setLore(lore);
         display.setItemMeta(meta);
         return display;

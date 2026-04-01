@@ -42,7 +42,7 @@ public class ConfigManager {
 
     // 씨앗
     private double seedDefaultPrice;
-    private int    seedBuyAmount;
+    private int[]  seedBuyAmounts;
 
     // 세금
     private double taxDefaultRate;
@@ -94,7 +94,10 @@ public class ConfigManager {
         goldSellAmount   = cfg.getInt("sell-amount.gold",   4);
 
         seedDefaultPrice = cfg.getDouble("seeds.default-price", 100.0);
-        seedBuyAmount    = cfg.getInt("seeds.buy-amount", 64);
+        var rawAmounts   = cfg.getIntegerList("seeds.buy-amounts");
+        seedBuyAmounts   = rawAmounts.isEmpty()
+            ? new int[]{4, 8, 64}
+            : rawAmounts.stream().mapToInt(Integer::intValue).limit(3).toArray();
 
         taxDefaultRate       = cfg.getDouble("tax.default-rate", 10.0);
         taxReducedRate       = cfg.getDouble("tax.reduced-rate", 5.0);
@@ -194,8 +197,8 @@ public class ConfigManager {
         };
     }
 
-    public double getSeedDefaultPrice() { return seedDefaultPrice; }
-    public int    getSeedBuyAmount()    { return seedBuyAmount; }
+    public double getSeedDefaultPrice()  { return seedDefaultPrice; }
+    public int[]  getSeedBuyAmounts()   { return seedBuyAmounts; }
 
     public double getTaxDefaultRate()       { return taxDefaultRate; }
     public double getTaxReducedRate()       { return taxReducedRate; }

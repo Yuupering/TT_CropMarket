@@ -17,21 +17,22 @@ import java.util.List;
 /**
  * 씨앗 세부 구매 GUI (5행 = 45슬롯)
  *
- * 레이아웃:
+ * 레이아웃 (buy-amounts 3개 기준):
  *   행0 [border × 9]
- *   행1 [b][b][b][b][seed icon][b][b][b][b]
- *   행2 [b][b][b][b][buy button][b][b][b][b]
+ *   행1 [b][수량1 아이콘][b][b][수량2 아이콘][b][b][수량3 아이콘][b]
+ *   행2 [b][수량1 구매][b][b][수량2 구매][b][b][수량3 구매][b]
  *   행3 [border × 9]
- *   행4 [b][b][b][b][back][b][b][b][b]
+ *   행4 [b][b][b][b][뒤로가기][b][b][b][b]
  */
 public class SeedBuyGUI {
 
     public static final String TITLE_PREFIX = "§2";
     public static final String TITLE_SUFFIX = " §2| 씨앗 구매";
+    public static final int    SLOT_BACK    = 40;
 
-    public static final int SLOT_ICON = 13;
-    public static final int SLOT_BUY  = 22;
-    public static final int SLOT_BACK = 40;
+    // 수량 선택지별 슬롯 (최대 3개)
+    private static final int[] SLOT_ICONS = {10, 13, 16};
+    private static final int[] SLOT_BUYS  = {19, 22, 25};
 
     private final CropMarketPlugin plugin;
 
@@ -48,12 +49,16 @@ public class SeedBuyGUI {
             if (isBorder(i)) inv.setItem(i, border);
         }
 
-        int buyAmount = plugin.getConfigManager().getSeedBuyAmount();
+        int[] amounts = plugin.getConfigManager().getSeedBuyAmounts();
+        double pricePerSeed = crop.getSeedPrice();
 
-        inv.setItem(SLOT_ICON, buildSeedIcon(player, crop, buyAmount));
-        inv.setItem(SLOT_BUY,  buildBuyButton(player, crop, buyAmount));
+        for (int i = 0; i < amounts.length && i < SLOT_ICONS.length; i++) {
+            int amount = amounts[i];
+            inv.setItem(SLOT_ICONS[i], buildIcon(player, crop, amount, pricePerSeed));
+            inv.setItem(SLOT_BUYS[i],  buildBuyButton(player, amount, pricePerSeed));
+        }
+
         inv.setItem(SLOT_BACK, makeItem(Material.ARROW, "§f» 목록으로 돌아가기"));
-
         player.openInventory(inv);
     }
 
@@ -67,9 +72,16 @@ public class SeedBuyGUI {
             return;
         }
 
-        if (slot != SLOT_BUY) return;
+        int amountIdx = -1;
+        for (int i = 0; i < SLOT_BUYS.length; i++) {
+            if (SLOT_BUYS[i] == slot) { amountIdx = i; break; }
+        }
+        if (amountIdx < 0) return;
 
-        int    amount  = plugin.getConfigManager().getSeedBuyAmount();
+        int[] amounts = plugin.getConfigManager().getSeedBuyAmounts();
+        if (amountIdx >= amounts.length) return;
+
+        int    amount  = amounts[amountIdx];
         double cost    = crop.getSeedPrice() * amount;
         double balance = plugin.getEconomy().getBalance(player);
 
@@ -114,7 +126,7 @@ public class SeedBuyGUI {
     //  아이템 빌드
     // ──────────────────────────────────────────
 
-    private ItemStack buildSeedIcon(Player player, CropEntry crop, int buyAmount) {
+    private ItemStack buildIcon(Player player, CropEntry crop, int amount, double pricePerSeed) {
         ItemStack display;
         try {
             CustomStack cs = CustomStack.getInstance(crop.getSeedItemId());
@@ -124,10 +136,9 @@ public class SeedBuyGUI {
         }
         display.setAmount(1);
 
-        double pricePerSeed = crop.getSeedPrice();
-        double totalCost    = pricePerSeed * buyAmount;
-        double balance      = plugin.getEconomy().getBalance(player);
-        boolean canAfford   = balance >= totalCost;
+        double totalCost  = pricePerSeed * amount;
+        double balance    = plugin.getEconomy().getBalance(player);
+        boolean canAfford = balance >= totalCost;
 
         ItemMeta meta = display.getItemMeta();
         meta.setDisplayName("§a" + strip(crop.getDisplayName()) + " §f씨앗");
@@ -135,7 +146,7 @@ public class SeedBuyGUI {
         List<String> lore = new ArrayList<>();
         lore.add("§8────────────────────");
         lore.add("§7개당 가격: §f" + String.format("%,.0f", pricePerSeed) + "§7원");
-        lore.add("§7구매 수량: §f" + buyAmount + "개");
+        lore.add("§7구매 수량: §f" + amount + "개");
         lore.add("§7총 비용:   " + (canAfford ? "§a" : "§c") + String.format("%,.0f", totalCost) + "§7원");
         lore.add("§8────────────────────");
         lore.add("§7보유 잔액: §f" + String.format("%,.0f", balance) + "§7원");
@@ -144,16 +155,16 @@ public class SeedBuyGUI {
         return display;
     }
 
-    private ItemStack buildBuyButton(Player player, CropEntry crop, int buyAmount) {
-        double totalCost  = crop.getSeedPrice() * buyAmount;
+    private ItemStack buildBuyButton(Player player, int amount, double pricePerSeed) {
+        double totalCost  = pricePerSeed * amount;
         double balance    = plugin.getEconomy().getBalance(player);
         boolean canAfford = balance >= totalCost;
 
         Material mat  = canAfford ? Material.EMERALD : Material.COAL;
-        String   name = canAfford ? "§a구매하기" : "§c잔액 부족";
+        String   name = canAfford ? "§a구매하기  §7[×" + amount + "]" : "§c잔액 부족  §7[×" + amount + "]";
 
         List<String> lore = new ArrayList<>();
-        lore.add("§7구매 수량: §f" + buyAmount + "개");
+        lore.add("§7구매 수량: §f" + amount + "개");
         lore.add("§7총 비용:   " + (canAfford ? "§a" : "§c") + String.format("%,.0f", totalCost) + "§7원");
 
         ItemStack item = new ItemStack(mat);

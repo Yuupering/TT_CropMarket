@@ -53,7 +53,8 @@ public class MainMenuGUI {
             "§7씨앗 종류: §f" + plugin.getConfigManager().getCrops().stream()
                 .filter(c -> c.hasSeed()).count() + "종",
             "§7씨앗 1개당: §f" + String.format("%,.0f", plugin.getConfigManager().getSeedDefaultPrice()) + "§7원",
-            "§7구매 단위: §f" + plugin.getConfigManager().getSeedBuyAmount() + "개",
+            "§7구매 단위: §f" + java.util.Arrays.stream(plugin.getConfigManager().getSeedBuyAmounts())
+                .mapToObj(Integer::toString).collect(java.util.stream.Collectors.joining("§8 / §f")) + "§7개",
             "",
             "§a» 클릭하여 입장"
         ));
