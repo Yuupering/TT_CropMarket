@@ -8,7 +8,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.Random;
-import java.util.logging.Logger;
 
 public class MarketManager {
 
@@ -28,20 +27,15 @@ public class MarketManager {
         GradeData   data   = crop.getGradeData(grade);
 
         if (config == null || data == null) {
-            plugin.getLogger().severe("Config/Data null - 작물: " + crop.getId() + ", 등급: " + grade);
             return SellResult.fail("이 등급은 설정되지 않았습니다.");
         }
 
         int required  = grade.getSellAmount();
         int available = countItems(player, config);
-        plugin.getLogger().info("아이템 확인 - 필요: " + required + ", 보유: " + available);
 
         if (available < required) {
-            plugin.getLogger().info("아이템 부족!");
             return SellResult.fail("아이템이 부족합니다. 필요: " + required + "개, 보유: " + available + "개");
         }
-
-        plugin.getLogger().info("판매 처리 중...");
 
         // 아이템 제거
         removeItems(player, config, required);

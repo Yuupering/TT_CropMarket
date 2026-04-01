@@ -50,7 +50,6 @@ public class RecoveryScheduler {
         }, delayTicks);
 
         tasks.put(grade, task);
-        plugin.getLogger().info("[" + grade.getDisplayName() + "] 다음 회복 이벤트: " + delayMinutes + "분 후");
     }
 
     private void applyRecovery(ItemGrade grade) {

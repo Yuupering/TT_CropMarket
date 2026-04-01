@@ -135,24 +135,16 @@ public class GUIListener implements Listener {
         CropEntry crop = activeSellCrop.get(player.getUniqueId());
         if (crop == null) {
             String rawName = CropSellGUI.extractCropName(title);
-            plugin.getLogger().info("추출된 작물 이름: '" + rawName + "'");
             for (CropEntry c : plugin.getConfigManager().getCrops()) {
                 String cropDisplayName = c.getDisplayName().replaceAll("§[0-9a-fk-or]", "");
-                plugin.getLogger().info("비교: '" + cropDisplayName + "' vs '" + rawName + "'");
                 if (cropDisplayName.equals(rawName)) {
                     crop = c;
-                    plugin.getLogger().info("작물 찾음: " + crop.getId());
                     break;
                 }
             }
-            if (crop == null) {
-                plugin.getLogger().info("작물을 찾을 수 없음!");
-                return;
-            }
+            if (crop == null) return;
             activeSellCrop.put(player.getUniqueId(), crop);
         }
-
-        plugin.getLogger().info("판매 시작: " + crop.getId() + ", 등급: " + grade);
 
         // 판매 처리
         SellResult result = plugin.getMarketManager().sellCrop(player, crop, grade);
