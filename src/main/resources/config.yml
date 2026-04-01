@@ -1,0 +1,316 @@
+# ==============================
+#   CropMarket 설정 파일
+# ==============================
+
+# 가격 자연 회복 인터벌 (등급별 독립 운영, 분단위)
+recovery:
+  normal:
+    min-minutes: 1
+    max-minutes: 15
+  silver:
+    min-minutes: 10
+    max-minutes: 60
+  gold:
+    min-minutes: 10
+    max-minutes: 90
+  # 회복 폭은 price-adjustment 와 동일한 범위를 사용합니다
+
+# 판매 시 가격 하락률 (%) — 회복 시에도 동일 범위 적용
+price-adjustment:
+  normal:
+    min-percent: 1.0
+    max-percent: 3.0
+  silver:
+    min-percent: 7.0
+    max-percent: 15.0
+  gold:
+    min-percent: 10.0
+    max-percent: 75.0
+
+# ==============================
+#   세금 설정
+# ==============================
+tax:
+  default-rate: 10.0
+  reduced-rate: 5.0
+  reduced-permission: "thetower.weeklyquest.clear"
+
+# ==============================
+#   등급별 가격 구조
+# ==============================
+# max-multiplier      : 최고가 배율 (기준가 × 배율)
+# crash-threshold-pct : 이 % 이하로 내려갈 때 크래시 확률 발동
+# crash-chance-pct    : 크래시 발동 확률 (%)
+grade-settings:
+  normal:
+    max-multiplier: 1.5
+    crash-threshold-pct: 125
+    crash-chance-min-pct: 1.0
+    crash-chance-max-pct: 5.0
+  silver:
+    max-multiplier: 2.0
+    crash-threshold-pct: 170
+    crash-chance-min-pct: 3.0
+    crash-chance-max-pct: 9.0
+  gold:
+    max-multiplier: 3.0
+    crash-threshold-pct: 200
+    crash-chance-min-pct: 5.0
+    crash-chance-max-pct: 20.0
+
+# ==============================
+#   크래시 후 복구 설정
+# ==============================
+# 크래시 발생 → delay-hours 후 해당 등급 가격을 기준가 × 배율로 설정
+crash-recovery:
+  delay-hours: 6
+  normal-multiplier: 1.25
+  silver-multiplier: 2.0
+  gold-multiplier: 1.5
+
+# ==============================
+#   씨앗 구매 설정
+# ==============================
+seeds:
+  default-price: 100.0   # 씨앗 개당 가격 (원)
+  buy-amount: 64         # 1회 좌클릭 구매 수량
+
+# ==============================
+#   작물 설정
+# ==============================
+# seed-id    : ItemsAdder 씨앗 아이템 ID
+# base-price : 기준가
+# min-price  : 최저가 (기준가 × 0.2 수준)
+# max-price  : 최고가 = 기준가 × 등급배율 (일반×2.0 / 은×3.0 / 금×3.5)
+crops:
+
+  tomato:
+    display-name: "§d토마토"
+    icon: APPLE
+    seed-id: "customcrops:tomato_seeds"
+    normal:
+      item-id: "TOMATO"
+      mmoitems-type: "COOKINGITEM"
+      base-price: 50.0
+      min-price: 10.0
+      max-price: 100.0        # 50 × 2.0
+    silver:
+      item-id: "customcrops:tomato_silver_star"
+      base-price: 685.0
+      min-price: 100.0
+      max-price: 2055.0       # 685 × 3.0
+    gold:
+      item-id: "customcrops:tomato_golden_star"
+      base-price: 5000.0
+      min-price: 1000.0
+      max-price: 17500.0      # 5000 × 3.5
+
+  corn:
+    display-name: "§d옥수수"
+    icon: WHEAT
+    seed-id: "customcrops:corn_seeds"
+    normal:
+      item-id: "CORN"
+      mmoitems-type: "COOKINGITEM"
+      base-price: 40.0
+      min-price: 8.0
+      max-price: 80.0         # 40 × 2.0
+    silver:
+      item-id: "customcrops:corn_silver_star"
+      base-price: 3050.0
+      min-price: 500.0
+      max-price: 9150.0       # 3050 × 3.0
+    gold:
+      item-id: "customcrops:corn_golden_star"
+      base-price: 5000.0
+      min-price: 1000.0
+      max-price: 17500.0      # 5000 × 3.5
+
+  hop:
+    display-name: "§d홉"
+    icon: VINE
+    seed-id: "customcrops:hop_seeds"
+    normal:
+      item-id: "HOP"
+      mmoitems-type: "COOKINGITEM"
+      base-price: 80.0
+      min-price: 15.0
+      max-price: 160.0        # 80 × 2.0
+    silver:
+      item-id: "customcrops:hop_silver_star"
+      base-price: 530.0
+      min-price: 80.0
+      max-price: 1590.0       # 530 × 3.0
+    gold:
+      item-id: "customcrops:hop_golden_star"
+      base-price: 5000.0
+      min-price: 1000.0
+      max-price: 17500.0      # 5000 × 3.5
+
+  grape:
+    display-name: "§d포도"
+    icon: PURPLE_DYE
+    seed-id: "customcrops:grape_seeds"
+    normal:
+      item-id: "GRAPE"
+      mmoitems-type: "COOKINGITEM"
+      base-price: 55.0
+      min-price: 11.0
+      max-price: 110.0        # 55 × 2.0
+    silver:
+      item-id: "customcrops:grape_silver_star"
+      base-price: 925.0
+      min-price: 150.0
+      max-price: 2775.0       # 925 × 3.0
+    gold:
+      item-id: "customcrops:grape_golden_star"
+      base-price: 5000.0
+      min-price: 1000.0
+      max-price: 17500.0      # 5000 × 3.5
+
+  pitaya:
+    display-name: "§d드래곤 후르츠"
+    icon: MAGENTA_DYE
+    seed-id: "customcrops:pitaya_seeds"
+    normal:
+      item-id: "PITAYA"
+      mmoitems-type: "COOKINGITEM"
+      base-price: 50.0
+      min-price: 10.0
+      max-price: 100.0        # 50 × 2.0
+    silver:
+      item-id: "customcrops:pitaya_silver_star"
+      base-price: 1000.0
+      min-price: 160.0
+      max-price: 3000.0       # 1000 × 3.0
+    gold:
+      item-id: "customcrops:pitaya_golden_star"
+      base-price: 5000.0
+      min-price: 1000.0
+      max-price: 17500.0      # 5000 × 3.5
+
+  pakchoi:
+    display-name: "§d청경채"
+    icon: CACTUS
+    seed-id: "customcrops:chinese_cabbage_seeds"
+    normal:
+      item-id: "PAKCHOI"
+      mmoitems-type: "COOKINGITEM"
+      base-price: 400.0
+      min-price: 80.0
+      max-price: 800.0        # 400 × 2.0
+    silver:
+      item-id: "customcrops:chinese_cabbage_silver_star"
+      base-price: 2200.0
+      min-price: 350.0
+      max-price: 6600.0       # 2200 × 3.0
+    gold:
+      item-id: "customcrops:chinese_cabbage_golden_star"
+      base-price: 5000.0
+      min-price: 1000.0
+      max-price: 17500.0      # 5000 × 3.5
+
+  pepper:
+    display-name: "§d고추"
+    icon: BLAZE_ROD
+    seed-id: "customcrops:pepper_seeds"
+    normal:
+      item-id: "PEPPER"
+      mmoitems-type: "COOKINGITEM"
+      base-price: 75.0
+      min-price: 15.0
+      max-price: 150.0        # 75 × 2.0
+    silver:
+      item-id: "customcrops:pepper_silver_star"
+      base-price: 1500.0
+      min-price: 240.0
+      max-price: 4500.0       # 1500 × 3.0
+    gold:
+      item-id: "customcrops:pepper_golden_star"
+      base-price: 5000.0
+      min-price: 1000.0
+      max-price: 17500.0      # 5000 × 3.5
+
+  garlic:
+    display-name: "§d마늘"
+    icon: SUGAR
+    seed-id: "customcrops:garlic_seeds"
+    normal:
+      item-id: "GARLIC"
+      mmoitems-type: "COOKINGITEM"
+      base-price: 35.0
+      min-price: 7.0
+      max-price: 70.0         # 35 × 2.0
+    silver:
+      item-id: "customcrops:garlic_silver_star"
+      base-price: 1450.0
+      min-price: 230.0
+      max-price: 4350.0       # 1450 × 3.0
+    gold:
+      item-id: "customcrops:garlic_golden_star"
+      base-price: 5000.0
+      min-price: 1000.0
+      max-price: 17500.0      # 5000 × 3.5
+
+  eggplant:
+    display-name: "§d가지"
+    icon: CHORUS_FRUIT
+    seed-id: "customcrops:eggplant_seeds"
+    normal:
+      item-id: "EGGPLANT"
+      mmoitems-type: "COOKINGITEM"
+      base-price: 230.0
+      min-price: 45.0
+      max-price: 460.0        # 230 × 2.0
+    silver:
+      item-id: "customcrops:eggplant_silver_star"
+      base-price: 600.0
+      min-price: 95.0
+      max-price: 1800.0       # 600 × 3.0
+    gold:
+      item-id: "customcrops:eggplant_golden_star"
+      base-price: 5000.0
+      min-price: 1000.0
+      max-price: 17500.0      # 5000 × 3.5
+
+  pineapple:
+    display-name: "§d파인애플"
+    icon: HONEYCOMB
+    seed-id: "customcrops:pineapple_seeds"
+    normal:
+      item-id: "PINEAPPLE"
+      mmoitems-type: "COOKINGITEM"
+      base-price: 100.0
+      min-price: 20.0
+      max-price: 200.0        # 100 × 2.0
+    silver:
+      item-id: "customcrops:pineapple_silver_star"
+      base-price: 920.0
+      min-price: 150.0
+      max-price: 2760.0       # 920 × 3.0
+    gold:
+      item-id: "customcrops:pineapple_golden_star"
+      base-price: 5000.0
+      min-price: 1000.0
+      max-price: 17500.0      # 5000 × 3.5
+
+  cabbage:
+    display-name: "§a양배추"
+    icon: LIME_WOOL
+    seed-id: "customcrops:cabbage_seeds"
+    normal:
+      item-id: "CABBAGE"
+      mmoitems-type: "COOKINGITEM"
+      base-price: 85.0
+      min-price: 17.0
+      max-price: 170.0        # 85 × 2.0
+    silver:
+      item-id: "customcrops:cabbage_silver_star"
+      base-price: 2100.0
+      min-price: 335.0
+      max-price: 6300.0       # 2100 × 3.0
+    gold:
+      item-id: "customcrops:cabbage_golden_star"
+      base-price: 5000.0
+      min-price: 1000.0
+      max-price: 17500.0      # 5000 × 3.5

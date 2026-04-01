@@ -1,0 +1,28 @@
+name: TT_CropMarket
+version: ${version}
+main: tt.cropmarket.CropMarketPlugin
+api-version: '1.20'
+description: 판매량에 따라 가격이 변동하는 동적 농산물 시장
+authors: [ Author ]
+
+depend:
+  - Vault
+  - ItemsAdder
+  - MMOItems
+
+commands:
+  농작물:
+    description: 농산물 시장 열기
+    permission: cropmarket.use
+  농작물관리:
+    description: 농산물 시장 관리
+    usage: /농작물관리 <reload|info|reset|set>
+    permission: cropmarket.admin
+
+permissions:
+  cropmarket.use:
+    description: 농산물 시장 이용
+    default: true
+  cropmarket.admin:
+    description: 농산물 시장 관리자 기능
+    default: op
