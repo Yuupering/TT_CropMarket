@@ -31,11 +31,6 @@ public class MarketManager {
             return SellResult.fail("이 등급은 설정되지 않았습니다.");
         }
 
-        // 붕괴 상태 체크 (가격 0 → 거래 불가)
-        if (data.getCurrentPrice() <= 0) {
-            return SellResult.fail("시장이 붕괴된 상태입니다. 복구될 때까지 거래할 수 없습니다.");
-        }
-
         // 세금 계산
         ConfigManager cfg = plugin.getConfigManager();
 
@@ -60,38 +55,45 @@ public class MarketManager {
 
         plugin.getEconomy().depositPlayer(player, netPayment);
 
-        // 가격 하락 적용
-        double[] range = cfg.getAdjustmentRange(grade);
-        double decreasePercent = Math.round((range[0] + random.nextDouble() * (range[1] - range[0])) * 10.0) / 10.0;
-        double newPrice = data.getCurrentPrice() * (1.0 - decreasePercent / 100.0);
-        newPrice = Math.max(newPrice, config.getMinPrice());
+        // 붕괴 상태(가격 0)면 가격 변동·크래시 체크 없이 0 유지
+        boolean crashed         = false;
+        double  newPrice;
+        double  decreasePercent = 0.0;
+        double  priceBeforeCrash = data.getCurrentPrice();
+        double  crashChancePct   = 0.0;
 
-        // 크래시 체크: 임계값 이상일 때만 확률 발생 (가격이 높을수록 확률 증가)
-        boolean crashed = false;
-        double[] crashSettings  = cfg.getCrashSettings(grade);
-        double crashThreshold   = config.getBasePrice() * (crashSettings[0] / 100.0);
-        double minChance        = crashSettings[1] / 100.0;
-        double maxChance        = crashSettings[2] / 100.0;
-
-        double crashChance = 0.0;
-        if (newPrice >= crashThreshold) {
-            // 가격이 threshold에서 maxPrice로 갈수록 확률이 minChance에서 maxChance로 증가
-            double maxPrice = config.getMaxPrice();
-            double priceRange = maxPrice - crashThreshold;
-            if (priceRange > 0) {
-                double progress = (newPrice - crashThreshold) / priceRange;
-                progress = Math.min(progress, 1.0);
-                crashChance = minChance + (maxChance - minChance) * progress;
-                crashChance = Math.min(crashChance, maxChance);
-            } else {
-                crashChance = maxChance;
-            }
-        }
-
-        double priceBeforeCrash = newPrice;
-        if (random.nextDouble() < crashChance) {
+        if (data.getCurrentPrice() <= 0) {
             newPrice = 0.0;
-            crashed  = true;
+        } else {
+            // 가격 하락 적용
+            double[] range = cfg.getAdjustmentRange(grade);
+            decreasePercent = Math.round((range[0] + random.nextDouble() * (range[1] - range[0])) * 10.0) / 10.0;
+            newPrice = data.getCurrentPrice() * (1.0 - decreasePercent / 100.0);
+            newPrice = Math.max(newPrice, config.getMinPrice());
+
+            // 크래시 체크: 임계값 이상일 때만 확률 발생 (가격이 높을수록 확률 증가)
+            double[] crashSettings = cfg.getCrashSettings(grade);
+            double crashThreshold  = config.getBasePrice() * (crashSettings[0] / 100.0);
+            double minChance       = crashSettings[1] / 100.0;
+            double maxChance       = crashSettings[2] / 100.0;
+
+            double crashChance = 0.0;
+            if (newPrice >= crashThreshold) {
+                double maxPrice   = config.getMaxPrice();
+                double priceRange = maxPrice - crashThreshold;
+                if (priceRange > 0) {
+                    double progress = Math.min((newPrice - crashThreshold) / priceRange, 1.0);
+                    crashChance = Math.min(minChance + (maxChance - minChance) * progress, maxChance);
+                } else {
+                    crashChance = maxChance;
+                }
+            }
+            crashChancePct = crashChance * 100.0;
+
+            if (random.nextDouble() < crashChance) {
+                newPrice = 0.0;
+                crashed  = true;
+            }
         }
 
         data.updatePrice(newPrice);
@@ -115,7 +117,7 @@ public class MarketManager {
                 crop.getDisplayName(),
                 grade.getDisplayName(),
                 priceBeforeCrash,
-                crashChance * 100.0
+                crashChancePct
             );
             scheduleCrashRecovery(crop, grade, config, data);
         }
