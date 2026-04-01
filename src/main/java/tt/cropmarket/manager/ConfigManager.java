@@ -115,9 +115,9 @@ public class ConfigManager {
             if (icon == null) icon = Material.WHEAT;
 
             CropEntry entry = new CropEntry(cropId, displayName, icon);
-            loadGrade(entry, cs, ItemGrade.NORMAL, ItemType.MMOITEMS);
-            loadGrade(entry, cs, ItemGrade.SILVER, ItemType.ITEMSADDER);
-            loadGrade(entry, cs, ItemGrade.GOLD,   ItemType.ITEMSADDER);
+            loadGrade(entry, cs, ItemGrade.NORMAL);
+            loadGrade(entry, cs, ItemGrade.SILVER);
+            loadGrade(entry, cs, ItemGrade.GOLD);
 
             String seedId = cs.getString("seed-id");
             if (seedId != null) {
@@ -129,12 +129,28 @@ public class ConfigManager {
         }
     }
 
-    private void loadGrade(CropEntry entry, ConfigurationSection cropSection,
-                           ItemGrade grade, ItemType itemType) {
+    private void loadGrade(CropEntry entry, ConfigurationSection cropSection, ItemGrade grade) {
         ConfigurationSection gs = cropSection.getConfigurationSection(grade.name().toLowerCase());
         if (gs == null) return;
         String itemId = gs.getString("item-id");
         if (itemId == null) return;
+
+        // item-type 명시 → 우선 적용, 없으면 자동 감지
+        ItemType itemType;
+        String typeStr = gs.getString("item-type", "").toUpperCase();
+        if (!typeStr.isEmpty()) {
+            itemType = switch (typeStr) {
+                case "ITEMSADDER" -> ItemType.ITEMSADDER;
+                case "MMOITEMS"   -> ItemType.MMOITEMS;
+                default           -> ItemType.VANILLA;
+            };
+        } else if (gs.contains("mmoitems-type")) {
+            itemType = ItemType.MMOITEMS;
+        } else if (itemId.contains(":")) {
+            itemType = ItemType.ITEMSADDER;
+        } else {
+            itemType = ItemType.VANILLA;
+        }
 
         entry.addGrade(grade, new GradeConfig(
             itemType, itemId,

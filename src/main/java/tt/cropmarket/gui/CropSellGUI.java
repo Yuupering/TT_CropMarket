@@ -164,38 +164,30 @@ public class CropSellGUI {
 
     private ItemStack getGradeItem(GradeConfig config) {
         if (config == null) return null;
-
-        ItemStack item = null;
-
-        // ItemsAdder 아이템
-        if (config.getItemType() == ItemType.ITEMSADDER) {
-            try {
-                CustomStack cs = CustomStack.getInstance(config.getItemId());
-                if (cs != null) {
-                    item = cs.getItemStack().clone();
-                    item.setAmount(1);
-                    return item;
+        try {
+            return switch (config.getItemType()) {
+                case VANILLA -> {
+                    Material mat = Material.matchMaterial(config.getItemId());
+                    yield mat != null ? new ItemStack(mat) : null;
                 }
-            } catch (Exception e) {
-                // 폴백
-            }
-        }
-
-        // MMOItems 아이템
-        if (config.getItemType() == ItemType.MMOITEMS) {
-            try {
-                item = MMOItems.plugin.getItem(config.getMmoitemsType(), config.getItemId());
-                if (item != null) {
+                case ITEMSADDER -> {
+                    CustomStack cs = CustomStack.getInstance(config.getItemId());
+                    if (cs == null) yield null;
+                    ItemStack item = cs.getItemStack().clone();
+                    item.setAmount(1);
+                    yield item;
+                }
+                case MMOITEMS -> {
+                    ItemStack item = MMOItems.plugin.getItem(config.getMmoitemsType(), config.getItemId());
+                    if (item == null) yield null;
                     item = item.clone();
                     item.setAmount(1);
-                    return item;
+                    yield item;
                 }
-            } catch (Exception e) {
-                // 폴백
-            }
+            };
+        } catch (Exception e) {
+            return null;
         }
-
-        return null;
     }
 
     // ──────────────────────────────────────────

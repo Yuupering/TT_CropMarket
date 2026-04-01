@@ -23,9 +23,12 @@ import java.util.UUID;
 public class GUIListener implements Listener {
 
     private final CropMarketPlugin plugin;
-    private final Map<UUID, CropEntry> activeSellCrop = new HashMap<>();
-    private final Map<UUID, CropEntry> activeBuyCrop  = new HashMap<>();
-    private final Map<UUID, Integer>   compassPage    = new HashMap<>();
+
+    private final Map<UUID, CropEntry> activeSellCrop  = new HashMap<>();
+    private final Map<UUID, CropEntry> activeBuyCrop   = new HashMap<>();
+    private final Map<UUID, Integer>   compassPage     = new HashMap<>();
+    private final Map<UUID, Integer>   marketItemPage  = new HashMap<>();
+    private final Map<UUID, Integer>   seedItemPage    = new HashMap<>();
 
     public GUIListener(CropMarketPlugin plugin) {
         this.plugin = plugin;
@@ -44,7 +47,7 @@ public class GUIListener implements Listener {
 
         } else if (title.equals(SeedShopGUI.TITLE)) {
             event.setCancelled(true);
-            plugin.getSeedShopGUI().handleBuy(player, event.getSlot());
+            handleSeedShopClick(player, event.getSlot());
 
         } else if (title.startsWith(SeedBuyGUI.TITLE_PREFIX) && title.endsWith(SeedBuyGUI.TITLE_SUFFIX)) {
             event.setCancelled(true);
@@ -60,11 +63,78 @@ public class GUIListener implements Listener {
         }
     }
 
+    @EventHandler
+    public void onInventoryClose(InventoryCloseEvent event) {
+        String title = event.getView().getTitle();
+        UUID uuid = event.getPlayer().getUniqueId();
+
+        if (title.equals(MarketGUI.TITLE) || (title.startsWith(CropSellGUI.TITLE_PREFIX) && title.endsWith(CropSellGUI.TITLE_SUFFIX))) {
+            activeSellCrop.remove(uuid);
+        }
+        if (title.equals(SeedShopGUI.TITLE) || (title.startsWith(SeedBuyGUI.TITLE_PREFIX) && title.endsWith(SeedBuyGUI.TITLE_SUFFIX))) {
+            activeBuyCrop.remove(uuid);
+        }
+        if (title.equals(MainMenuGUI.TITLE)) {
+            compassPage.remove(uuid);
+            marketItemPage.remove(uuid);
+            seedItemPage.remove(uuid);
+        }
+    }
+
+    // ──────────────────────────────────────────
+    //  메인 메뉴
+    // ──────────────────────────────────────────
+
+    private void handleMainMenu(Player player, int slot) {
+        if (slot == MainMenuGUI.SLOT_SEEDS) {
+            seedItemPage.put(player.getUniqueId(), 0);
+            plugin.getSeedShopGUI().open(player, 0);
+        } else if (slot == MainMenuGUI.SLOT_MARKET) {
+            marketItemPage.put(player.getUniqueId(), 0);
+            plugin.getMarketGUI().open(player, 0, 0);
+        }
+    }
+
+    // ──────────────────────────────────────────
+    //  씨앗 상점 목록
+    // ──────────────────────────────────────────
+
+    private void handleSeedShopClick(Player player, int slot) {
+        int page = seedItemPage.getOrDefault(player.getUniqueId(), 0);
+
+        if (slot == SeedShopGUI.SLOT_BACK) {
+            seedItemPage.remove(player.getUniqueId());
+            plugin.getMainMenuGUI().open(player);
+            return;
+        }
+        if (slot == SeedShopGUI.SLOT_PREV) {
+            int newPage = Math.max(0, page - 1);
+            seedItemPage.put(player.getUniqueId(), newPage);
+            plugin.getSeedShopGUI().open(player, newPage);
+            return;
+        }
+        if (slot == SeedShopGUI.SLOT_NEXT) {
+            int newPage = page + 1;
+            seedItemPage.put(player.getUniqueId(), newPage);
+            plugin.getSeedShopGUI().open(player, newPage);
+            return;
+        }
+
+        plugin.getSeedShopGUI().handleSeedClick(player, slot, page);
+    }
+
     // ──────────────────────────────────────────
     //  씨앗 세부 구매 GUI
     // ──────────────────────────────────────────
 
     private void handleSeedBuyClick(Player player, int slot, String title) {
+        // 뒤로가기 → 씨앗 상점의 현재 페이지로 복귀
+        if (slot == SeedBuyGUI.SLOT_BACK) {
+            int page = seedItemPage.getOrDefault(player.getUniqueId(), 0);
+            plugin.getSeedShopGUI().open(player, page);
+            return;
+        }
+
         CropEntry crop = activeBuyCrop.get(player.getUniqueId());
         if (crop == null) {
             String rawName = SeedBuyGUI.extractCropName(title);
@@ -80,55 +150,39 @@ public class GUIListener implements Listener {
         plugin.getSeedBuyGUI().handleClick(player, slot, crop);
     }
 
-    @EventHandler
-    public void onInventoryClose(InventoryCloseEvent event) {
-        String title = event.getView().getTitle();
-        UUID uuid = event.getPlayer().getUniqueId();
-        if (title.equals(MarketGUI.TITLE) || (title.startsWith(CropSellGUI.TITLE_PREFIX) && title.endsWith(CropSellGUI.TITLE_SUFFIX))) {
-            activeSellCrop.remove(uuid);
-        }
-        if (title.equals(SeedShopGUI.TITLE) || (title.startsWith(SeedBuyGUI.TITLE_PREFIX) && title.endsWith(SeedBuyGUI.TITLE_SUFFIX))) {
-            activeBuyCrop.remove(uuid);
-        }
-        // compassPage는 MainMenu로 완전히 나갔을 때만 초기화
-        if (title.equals(MainMenuGUI.TITLE)) {
-            compassPage.remove(uuid);
-        }
-    }
-
-    // ──────────────────────────────────────────
-    //  초기 메뉴
-    // ──────────────────────────────────────────
-
-    private void handleMainMenu(Player player, int slot) {
-        if (slot == MainMenuGUI.SLOT_SEEDS) {
-            plugin.getSeedShopGUI().open(player);
-        } else if (slot == MainMenuGUI.SLOT_MARKET) {
-            plugin.getMarketGUI().open(player);
-        }
-    }
-
     // ──────────────────────────────────────────
     //  농작물 시장 목록
     // ──────────────────────────────────────────
 
     private void handleMarketClick(Player player, int slot) {
-        // 뒤로가기
+        int itemPage    = marketItemPage.getOrDefault(player.getUniqueId(), 0);
+        int cPage       = compassPage.getOrDefault(player.getUniqueId(), 0);
+
         if (slot == MarketGUI.SLOT_BACK) {
+            marketItemPage.remove(player.getUniqueId());
             plugin.getMainMenuGUI().open(player);
             return;
         }
-
-        // 나침반 클릭 → 다음 페이지
+        if (slot == MarketGUI.SLOT_PREV) {
+            int newPage = Math.max(0, itemPage - 1);
+            marketItemPage.put(player.getUniqueId(), newPage);
+            plugin.getMarketGUI().open(player, cPage, newPage);
+            return;
+        }
+        if (slot == MarketGUI.SLOT_NEXT) {
+            int newPage = itemPage + 1;
+            marketItemPage.put(player.getUniqueId(), newPage);
+            plugin.getMarketGUI().open(player, cPage, newPage);
+            return;
+        }
         if (slot == MarketGUI.SLOT_INFO) {
-            int current = compassPage.getOrDefault(player.getUniqueId(), 0);
-            int next = (current + 1) % MarketGUI.MAX_PAGES;
+            int next = (cPage + 1) % MarketGUI.MAX_PAGES;
             compassPage.put(player.getUniqueId(), next);
-            plugin.getMarketGUI().open(player, next);
+            plugin.getMarketGUI().open(player, next, itemPage);
             return;
         }
 
-        int index = plugin.getMarketGUI().slotToCropIndex(slot);
+        int index = plugin.getMarketGUI().slotToCropIndex(slot, itemPage);
         if (index < 0) return;
 
         var crops = plugin.getConfigManager().getCrops();
@@ -144,14 +198,14 @@ public class GUIListener implements Listener {
     // ──────────────────────────────────────────
 
     private void handleSellClick(Player player, int slot, String title) {
-        // 뒤로가기
         if (slot == CropSellGUI.SLOT_BACK) {
             activeSellCrop.remove(player.getUniqueId());
-            plugin.getMarketGUI().open(player);
+            int itemPage = marketItemPage.getOrDefault(player.getUniqueId(), 0);
+            int cPage    = compassPage.getOrDefault(player.getUniqueId(), 0);
+            plugin.getMarketGUI().open(player, cPage, itemPage);
             return;
         }
 
-        // 판매 슬롯 → 등급
         ItemGrade grade = switch (slot) {
             case CropSellGUI.SLOT_NORMAL_SELL -> ItemGrade.NORMAL;
             case CropSellGUI.SLOT_SILVER_SELL -> ItemGrade.SILVER;
@@ -160,13 +214,11 @@ public class GUIListener implements Listener {
         };
         if (grade == null) return;
 
-        // 작물 찾기
         CropEntry crop = activeSellCrop.get(player.getUniqueId());
         if (crop == null) {
             String rawName = CropSellGUI.extractCropName(title);
             for (CropEntry c : plugin.getConfigManager().getCrops()) {
-                String cropDisplayName = c.getDisplayName().replaceAll("§[0-9a-fk-or]", "");
-                if (cropDisplayName.equals(rawName)) {
+                if (c.getDisplayName().replaceAll("§[0-9a-fk-or]", "").equals(rawName)) {
                     crop = c;
                     break;
                 }
@@ -175,7 +227,6 @@ public class GUIListener implements Listener {
             activeSellCrop.put(player.getUniqueId(), crop);
         }
 
-        // 판매 처리
         SellResult result = plugin.getMarketManager().sellCrop(player, crop, grade);
 
         if (result.success()) {
@@ -206,7 +257,6 @@ public class GUIListener implements Listener {
             player.sendMessage("§c[농작물판매] " + result.message());
         }
 
-        // GUI 갱신
         final CropEntry finalCrop = crop;
         Bukkit.getScheduler().runTask(plugin, () ->
             plugin.getCropSellGUI().open(player, finalCrop));

@@ -147,10 +147,14 @@ seeds:
 #   seed-id      : 씨앗 상점에서 판매할 ItemsAdder 씨앗 ID
 #
 # [등급별 항목 — normal / silver / gold]
+#   item-type     : 아이템 종류 (생략 시 자동 감지)
+#                   · VANILLA    — 기본 마인크래프트 아이템  (예: DIAMOND, WHEAT)
+#                   · ITEMSADDER — ItemsAdder 커스텀 아이템  (item-id 에 ":" 포함 시 자동 감지)
+#                   · MMOITEMS   — MMOItems 커스텀 아이템    (mmoitems-type 있을 시 자동 감지)
 #   item-id       : 아이템 식별자
-#                   · 일반(normal) : MMOItems ID  (예: "TOMATO")
-#                     mmoitems-type 도 함께 지정 필요  (예: "COOKINGITEM")
-#                   · 은·금(silver/gold) : ItemsAdder ID  (예: "customcrops:tomato_silver_star")
+#                   · VANILLA    : Material 이름  (예: "DIAMOND")
+#                   · ITEMSADDER : 네임스페이스 ID (예: "customcrops:tomato_silver_star")
+#                   · MMOITEMS   : MMOItems ID     (예: "TOMATO"), mmoitems-type 도 함께 지정
 #   base-price    : 기준가 (원) — 시장 붕괴 임계값 계산의 기준
 #   min-price     : 최저가 (원) — 아무리 하락해도 이 가격 이하로 내려가지 않음
 #   max-price     : 최고가 (원) — 기준가 × grade-settings 의 max-multiplier 와 일치

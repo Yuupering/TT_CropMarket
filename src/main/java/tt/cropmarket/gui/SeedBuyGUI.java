@@ -67,11 +67,6 @@ public class SeedBuyGUI {
     // ──────────────────────────────────────────
 
     public void handleClick(Player player, int slot, CropEntry crop) {
-        if (slot == SLOT_BACK) {
-            plugin.getSeedShopGUI().open(player);
-            return;
-        }
-
         int amountIdx = -1;
         for (int i = 0; i < SLOT_BUYS.length; i++) {
             if (SLOT_BUYS[i] == slot) { amountIdx = i; break; }

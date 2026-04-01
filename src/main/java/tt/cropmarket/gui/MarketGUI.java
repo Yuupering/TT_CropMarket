@@ -2,6 +2,7 @@ package tt.cropmarket.gui;
 
 import tt.cropmarket.CropMarketPlugin;
 import tt.cropmarket.model.*;
+import dev.lone.itemsadder.api.CustomStack;
 import net.Indyuce.mmoitems.MMOItems;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -17,7 +18,7 @@ public class MarketGUI {
 
     private final CropMarketPlugin plugin;
 
-    // 작물 슬롯: 6행 인벤토리 기준 행 1-4, 열 1-7
+    // 작물 슬롯: 6행 인벤토리 기준 행 1-4, 열 1-7 (28개)
     private static final List<Integer> CROP_SLOTS = new ArrayList<>();
     static {
         for (int row = 1; row <= 4; row++)
@@ -25,38 +26,59 @@ public class MarketGUI {
                 CROP_SLOTS.add(row * 9 + col);
     }
 
-    public static final String TITLE     = "§6농산물 시장";
-    public static final int    SLOT_BACK = 45;
-    public static final int    SLOT_INFO = 49;
-    public static final int    MAX_PAGES = 3;
+    public static final String TITLE             = "§6농산물 시장";
+    public static final int    MAX_ITEMS_PER_PAGE = 28;
+    public static final int    SLOT_BACK         = 45;
+    public static final int    SLOT_PREV         = 46;
+    public static final int    SLOT_NEXT         = 52;
+    public static final int    SLOT_INFO         = 49;
+    public static final int    MAX_PAGES         = 3;
 
     public MarketGUI(CropMarketPlugin plugin) {
         this.plugin = plugin;
     }
 
     public void open(Player player) {
-        open(player, 0);
+        open(player, 0, 0);
     }
 
-    public void open(Player player, int page) {
+    public void open(Player player, int compassPage) {
+        open(player, compassPage, 0);
+    }
+
+    public void open(Player player, int compassPage, int itemPage) {
         Inventory inv = Bukkit.createInventory(null, 54, TITLE);
 
-        ItemStack border = border();
         // 테두리 채우기
+        ItemStack border = border();
         for (int i = 0; i < 54; i++) {
             int row = i / 9, col = i % 9;
             if (row == 0 || row == 5 || col == 0 || col == 8) inv.setItem(i, border);
         }
 
-        // 작물 아이템 배치
-        List<CropEntry> crops = plugin.getConfigManager().getCrops();
-        for (int i = 0; i < Math.min(crops.size(), CROP_SLOTS.size()); i++) {
-            inv.setItem(CROP_SLOTS.get(i), buildCropItem(crops.get(i)));
+        // 작물 아이템 배치 (페이지 단위)
+        List<CropEntry> allCrops = plugin.getConfigManager().getCrops();
+        int totalPages = (int) Math.ceil((double) allCrops.size() / MAX_ITEMS_PER_PAGE);
+        int from = itemPage * MAX_ITEMS_PER_PAGE;
+        int to   = Math.min(from + MAX_ITEMS_PER_PAGE, allCrops.size());
+        List<CropEntry> pageCrops = allCrops.subList(from, to);
+
+        for (int i = 0; i < pageCrops.size(); i++) {
+            inv.setItem(CROP_SLOTS.get(i), buildCropItem(pageCrops.get(i)));
         }
 
-        // 하단: 뒤로가기 + 나침반 (시스템 설명, 페이지별)
+        // 하단 버튼
         inv.setItem(SLOT_BACK, makeItem(Material.BARRIER, "§c» 뒤로가기"));
-        inv.setItem(SLOT_INFO, buildInfoItem(page));
+        inv.setItem(SLOT_INFO, buildInfoItem(compassPage));
+
+        if (itemPage > 0) {
+            inv.setItem(SLOT_PREV, makeItem(Material.ARROW,
+                "§f« 이전 페이지  §8[" + itemPage + "/" + totalPages + "]"));
+        }
+        if (itemPage < totalPages - 1) {
+            inv.setItem(SLOT_NEXT, makeItem(Material.ARROW,
+                "§f다음 페이지 »  §8[" + (itemPage + 2) + "/" + totalPages + "]"));
+        }
 
         player.openInventory(inv);
     }
@@ -102,22 +124,33 @@ public class MarketGUI {
         };
     }
 
-    private ItemStack getMmoIcon(CropEntry crop) {
+    private ItemStack getCropIcon(CropEntry crop) {
         GradeConfig config = crop.getGradeConfig(ItemGrade.NORMAL);
-        if (config != null && config.getItemType() == ItemType.MMOITEMS) {
+        if (config != null) {
             try {
-                ItemStack item = MMOItems.plugin.getItem(config.getMmoitemsType(), config.getItemId());
-                if (item != null) return item.clone();
-            } catch (Exception e) {
-                // 폴백
-            }
+                return switch (config.getItemType()) {
+                    case VANILLA -> {
+                        Material mat = Material.matchMaterial(config.getItemId());
+                        yield mat != null ? new ItemStack(mat) : null;
+                    }
+                    case ITEMSADDER -> {
+                        CustomStack cs = CustomStack.getInstance(config.getItemId());
+                        yield cs != null ? cs.getItemStack().clone() : null;
+                    }
+                    case MMOITEMS -> {
+                        ItemStack item = MMOItems.plugin.getItem(config.getMmoitemsType(), config.getItemId());
+                        yield item != null ? item.clone() : null;
+                    }
+                };
+            } catch (Exception ignored) {}
         }
         return new ItemStack(crop.getIcon());
     }
 
     private ItemStack buildCropItem(CropEntry crop) {
-        ItemStack item = getMmoIcon(crop);
-        ItemMeta  meta = item.getItemMeta();
+        ItemStack item = getCropIcon(crop);
+        if (item == null) item = new ItemStack(crop.getIcon());
+        ItemMeta meta = item.getItemMeta();
         meta.setDisplayName(crop.getDisplayName());
 
         List<String> lore = new ArrayList<>();
@@ -145,9 +178,11 @@ public class MarketGUI {
         return item;
     }
 
-    /** 슬롯 번호 → 작물 인덱스 */
-    public int slotToCropIndex(int slot) {
-        return CROP_SLOTS.indexOf(slot);
+    /** 슬롯 번호 → 전체 작물 인덱스 (itemPage 반영) */
+    public int slotToCropIndex(int slot, int itemPage) {
+        int local = CROP_SLOTS.indexOf(slot);
+        if (local < 0) return -1;
+        return itemPage * MAX_ITEMS_PER_PAGE + local;
     }
 
     // ──────────────────────────────────────────
@@ -166,7 +201,7 @@ public class MarketGUI {
         ItemStack item = new ItemStack(mat);
         ItemMeta  meta = item.getItemMeta();
         meta.setDisplayName(name);
-        meta.setLore(List.of(loreLines));
+        if (loreLines.length > 0) meta.setLore(List.of(loreLines));
         item.setItemMeta(meta);
         return item;
     }

@@ -4,6 +4,7 @@ import tt.cropmarket.CropMarketPlugin;
 import tt.cropmarket.model.*;
 import dev.lone.itemsadder.api.CustomStack;
 import io.lumine.mythic.lib.api.item.NBTItem;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -177,17 +178,22 @@ public class MarketManager {
     public boolean matchesItem(ItemStack item, GradeConfig config) {
         if (item == null) return false;
         try {
-            if (config.getItemType() == ItemType.MMOITEMS) {
-                NBTItem nbt = NBTItem.get(item);
-                if (!nbt.hasType()) return false;
-                String type = nbt.getType();
-                String id   = nbt.getString("MMOITEMS_ITEM_ID");
-                return config.getMmoitemsType().equalsIgnoreCase(type)
-                    && config.getItemId().equalsIgnoreCase(id);
-            } else {
-                CustomStack cs = CustomStack.byItemStack(item);
-                return cs != null && cs.getNamespacedID().equals(config.getItemId());
-            }
+            return switch (config.getItemType()) {
+                case VANILLA -> {
+                    Material mat = Material.matchMaterial(config.getItemId());
+                    yield mat != null && item.getType() == mat;
+                }
+                case MMOITEMS -> {
+                    NBTItem nbt = NBTItem.get(item);
+                    if (!nbt.hasType()) yield false;
+                    yield config.getMmoitemsType().equalsIgnoreCase(nbt.getType())
+                        && config.getItemId().equalsIgnoreCase(nbt.getString("MMOITEMS_ITEM_ID"));
+                }
+                case ITEMSADDER -> {
+                    CustomStack cs = CustomStack.byItemStack(item);
+                    yield cs != null && cs.getNamespacedID().equals(config.getItemId());
+                }
+            };
         } catch (Exception e) {
             return false;
         }

@@ -14,24 +14,25 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 씨앗 구매 GUI (6행 = 54슬롯)
+ * 씨앗 구매 목록 GUI (6행 = 54슬롯)
  *
  * 레이아웃:
  *   행0        [border × 9]
- *   행1        [b][씨앗0][씨앗1][씨앗2][씨앗3][씨앗4][씨앗5][씨앗6][b]
- *   행2        [b][씨앗7][씨앗8][씨앗9][씨앗10][b][b][b][b]
- *   행3~4      [border × 18]
- *   행5        [b][b][b][b][BACK][b][b][b][b]
+ *   행1~4      [b][씨앗...][b]  (28슬롯)
+ *   행5        [b][b][prev][b][back][b][next][b][b]
  */
 public class SeedShopGUI {
 
-    public static final String TITLE  = "§2씨앗 구매";
-    public static final int    SLOT_BACK = 49;
+    public static final String TITLE             = "§2씨앗 구매";
+    public static final int    MAX_ITEMS_PER_PAGE = 28;
+    public static final int    SLOT_PREV         = 47;
+    public static final int    SLOT_BACK         = 49;
+    public static final int    SLOT_NEXT         = 51;
 
-    // 씨앗 표시 슬롯 (행1 col1~7, 행2 col1~7)
+    // 씨앗 표시 슬롯: 행1~4, 열1~7
     private static final List<Integer> SEED_SLOTS = new ArrayList<>();
     static {
-        for (int row = 1; row <= 2; row++)
+        for (int row = 1; row <= 4; row++)
             for (int col = 1; col <= 7; col++)
                 SEED_SLOTS.add(row * 9 + col);
     }
@@ -43,27 +44,59 @@ public class SeedShopGUI {
     }
 
     public void open(Player player) {
+        open(player, 0);
+    }
+
+    public void open(Player player, int page) {
         Inventory inv = Bukkit.createInventory(null, 54, TITLE);
 
         ItemStack border = border();
         for (int i = 0; i < 54; i++) {
             int row = i / 9, col = i % 9;
-            if (row == 0 || row >= 3 || col == 0 || col == 8) inv.setItem(i, border);
+            if (row == 0 || row == 5 || col == 0 || col == 8) inv.setItem(i, border);
         }
 
-        // 씨앗 배치
-        List<CropEntry> crops = plugin.getConfigManager().getCrops().stream()
+        List<CropEntry> allSeeds = plugin.getConfigManager().getCrops().stream()
                 .filter(CropEntry::hasSeed).toList();
+        int totalPages = Math.max(1, (int) Math.ceil((double) allSeeds.size() / MAX_ITEMS_PER_PAGE));
+        int from = page * MAX_ITEMS_PER_PAGE;
+        int to   = Math.min(from + MAX_ITEMS_PER_PAGE, allSeeds.size());
 
-        for (int i = 0; i < Math.min(crops.size(), SEED_SLOTS.size()); i++) {
-            inv.setItem(SEED_SLOTS.get(i), buildSeedItem(player, crops.get(i)));
+        List<CropEntry> pageSeeds = allSeeds.subList(from, to);
+        for (int i = 0; i < pageSeeds.size(); i++) {
+            inv.setItem(SEED_SLOTS.get(i), buildSeedItem(player, pageSeeds.get(i)));
         }
 
-        // 뒤로가기 버튼
         inv.setItem(SLOT_BACK, makeItem(Material.BARRIER, "§c» 뒤로가기"));
+
+        if (page > 0) {
+            inv.setItem(SLOT_PREV, makeItem(Material.ARROW,
+                "§f« 이전 페이지  §8[" + page + "/" + totalPages + "]"));
+        }
+        if (page < totalPages - 1) {
+            inv.setItem(SLOT_NEXT, makeItem(Material.ARROW,
+                "§f다음 페이지 »  §8[" + (page + 2) + "/" + totalPages + "]"));
+        }
 
         player.openInventory(inv);
     }
+
+    /** 씨앗 슬롯 클릭 시 세부 구매창 오픈 (GUIListener 에서 호출) */
+    public void handleSeedClick(Player player, int slot, int page) {
+        int local = SEED_SLOTS.indexOf(slot);
+        if (local < 0) return;
+
+        List<CropEntry> allSeeds = plugin.getConfigManager().getCrops().stream()
+                .filter(CropEntry::hasSeed).toList();
+        int globalIndex = page * MAX_ITEMS_PER_PAGE + local;
+        if (globalIndex >= allSeeds.size()) return;
+
+        plugin.getSeedBuyGUI().open(player, allSeeds.get(globalIndex));
+    }
+
+    // ──────────────────────────────────────────
+    //  아이템 빌드
+    // ──────────────────────────────────────────
 
     private ItemStack buildSeedItem(Player player, CropEntry crop) {
         ItemStack display;
@@ -95,27 +128,6 @@ public class SeedShopGUI {
         meta.setLore(lore);
         display.setItemMeta(meta);
         return display;
-    }
-
-    // ──────────────────────────────────────────
-    //  구매 처리 (GUIListener 에서 호출)
-    // ──────────────────────────────────────────
-
-    public void handleBuy(Player player, int slot) {
-        if (slot == SLOT_BACK) {
-            plugin.getMainMenuGUI().open(player);
-            return;
-        }
-
-        int index = SEED_SLOTS.indexOf(slot);
-        if (index < 0) return;
-
-        List<CropEntry> crops = plugin.getConfigManager().getCrops().stream()
-                .filter(CropEntry::hasSeed).toList();
-        if (index >= crops.size()) return;
-
-        CropEntry crop = crops.get(index);
-        plugin.getSeedBuyGUI().open(player, crop);
     }
 
     // ──────────────────────────────────────────
