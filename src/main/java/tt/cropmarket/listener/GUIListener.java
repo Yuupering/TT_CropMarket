@@ -111,6 +111,10 @@ public class GUIListener implements Listener {
             marketItemPage.put(player.getUniqueId(), 0);
             plugin.getMarketGUI().open(player, 0, 0);
         } else if (slot == MainMenuGUI.SLOT_GENERAL) {
+            var cfg = plugin.getConfigManager();
+            if (!cfg.isGeneralShopEnabled()) return;
+            if (cfg.isGeneralShopPermEnabled()
+                    && !player.hasPermission(cfg.getGeneralShopPermNode())) return;
             generalItemPage.put(player.getUniqueId(), 0);
             plugin.getGeneralShopGUI().open(player, 0);
         }
