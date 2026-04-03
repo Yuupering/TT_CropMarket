@@ -2,6 +2,7 @@ package tt.cropmarket.manager;
 
 import tt.cropmarket.CropMarketPlugin;
 import tt.cropmarket.model.*;
+import tt.cropmarket.model.GeneralShopEntry;
 import dev.lone.itemsadder.api.CustomStack;
 import io.lumine.mythic.lib.api.item.NBTItem;
 import org.bukkit.Material;
@@ -183,6 +184,38 @@ public class MarketManager {
     }
 
     // ──────────────────────────────────────────
+    //  일반 판매
+    // ──────────────────────────────────────────
+
+    public SellResult sellGeneral(Player player, GeneralShopEntry entry) {
+        ConfigManager cfg = plugin.getConfigManager();
+        int available = countItems(player, entry);
+        int required  = entry.getSellAmount();
+
+        if (available < required) {
+            return SellResult.fail("아이템이 부족합니다. 필요: " + required + "개, 보유: " + available + "개");
+        }
+
+        removeItems(player, entry, required);
+
+        double taxRate = (!cfg.getTaxReducedPermission().isEmpty()
+                && player.hasPermission(cfg.getTaxReducedPermission()))
+                ? cfg.getTaxReducedRate() / 100.0
+                : cfg.getTaxDefaultRate() / 100.0;
+
+        double grossPayment = entry.getPrice() * required;
+        double taxAmount    = Math.round(grossPayment * taxRate * 100.0) / 100.0;
+        double netPayment   = grossPayment - taxAmount;
+
+        plugin.getEconomy().depositPlayer(player, netPayment);
+        plugin.getMarketLogger().logGeneralSell(
+            player.getName(), entry.getDisplayName(), required, grossPayment, taxAmount, netPayment
+        );
+
+        return SellResult.success(required, grossPayment, taxAmount, netPayment, 0, false);
+    }
+
+    // ──────────────────────────────────────────
     //  아이템 카운트 / 제거
     // ──────────────────────────────────────────
 
@@ -193,6 +226,32 @@ public class MarketManager {
             if (matchesItem(item, config)) count += item.getAmount();
         }
         return count;
+    }
+
+    public int countItems(Player player, GeneralShopEntry entry) {
+        int count = 0;
+        for (ItemStack item : player.getInventory().getContents()) {
+            if (item == null) continue;
+            if (matchesItem(item, entry)) count += item.getAmount();
+        }
+        return count;
+    }
+
+    private void removeItems(Player player, GeneralShopEntry entry, int amount) {
+        int remaining = amount;
+        ItemStack[] contents = player.getInventory().getContents();
+        for (int i = 0; i < contents.length && remaining > 0; i++) {
+            ItemStack item = contents[i];
+            if (item == null || !matchesItem(item, entry)) continue;
+            if (item.getAmount() <= remaining) {
+                remaining -= item.getAmount();
+                player.getInventory().setItem(i, null);
+            } else {
+                item.setAmount(item.getAmount() - remaining);
+                remaining = 0;
+            }
+        }
+        player.updateInventory();
     }
 
     private void removeItems(Player player, GradeConfig config, int amount) {
@@ -215,6 +274,30 @@ public class MarketManager {
     // ──────────────────────────────────────────
     //  아이템 매칭
     // ──────────────────────────────────────────
+
+    public boolean matchesItem(ItemStack item, GeneralShopEntry entry) {
+        if (item == null) return false;
+        try {
+            return switch (entry.getItemType()) {
+                case VANILLA -> {
+                    Material mat = Material.matchMaterial(entry.getItemId());
+                    yield mat != null && item.getType() == mat;
+                }
+                case MMOITEMS -> {
+                    NBTItem nbt = NBTItem.get(item);
+                    if (!nbt.hasType()) yield false;
+                    yield entry.getMmoitemsType().equalsIgnoreCase(nbt.getType())
+                        && entry.getItemId().equalsIgnoreCase(nbt.getString("MMOITEMS_ITEM_ID"));
+                }
+                case ITEMSADDER -> {
+                    CustomStack cs = CustomStack.byItemStack(item);
+                    yield cs != null && cs.getNamespacedID().equals(entry.getItemId());
+                }
+            };
+        } catch (Throwable e) {
+            return false;
+        }
+    }
 
     public boolean matchesItem(ItemStack item, GradeConfig config) {
         if (item == null) return false;

@@ -2,12 +2,15 @@ package tt.cropmarket.listener;
 
 import tt.cropmarket.CropMarketPlugin;
 import tt.cropmarket.gui.CropSellGUI;
+import tt.cropmarket.gui.GeneralSellGUI;
+import tt.cropmarket.gui.GeneralShopGUI;
 import tt.cropmarket.gui.MainMenuGUI;
 import tt.cropmarket.gui.MarketGUI;
 import tt.cropmarket.gui.SeedBuyGUI;
 import tt.cropmarket.gui.SeedShopGUI;
 import tt.cropmarket.manager.MarketManager.SellResult;
 import tt.cropmarket.model.CropEntry;
+import tt.cropmarket.model.GeneralShopEntry;
 import tt.cropmarket.model.ItemGrade;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -24,11 +27,13 @@ public class GUIListener implements Listener {
 
     private final CropMarketPlugin plugin;
 
-    private final Map<UUID, CropEntry> activeSellCrop  = new HashMap<>();
-    private final Map<UUID, CropEntry> activeBuyCrop   = new HashMap<>();
-    private final Map<UUID, Integer>   compassPage     = new HashMap<>();
-    private final Map<UUID, Integer>   marketItemPage  = new HashMap<>();
-    private final Map<UUID, Integer>   seedItemPage    = new HashMap<>();
+    private final Map<UUID, CropEntry>        activeSellCrop   = new HashMap<>();
+    private final Map<UUID, CropEntry>        activeBuyCrop    = new HashMap<>();
+    private final Map<UUID, GeneralShopEntry> activeGeneralEntry = new HashMap<>();
+    private final Map<UUID, Integer>          compassPage      = new HashMap<>();
+    private final Map<UUID, Integer>          marketItemPage   = new HashMap<>();
+    private final Map<UUID, Integer>          seedItemPage     = new HashMap<>();
+    private final Map<UUID, Integer>          generalItemPage  = new HashMap<>();
 
     public GUIListener(CropMarketPlugin plugin) {
         this.plugin = plugin;
@@ -60,6 +65,14 @@ public class GUIListener implements Listener {
         } else if (title.startsWith(CropSellGUI.TITLE_PREFIX) && title.endsWith(CropSellGUI.TITLE_SUFFIX)) {
             event.setCancelled(true);
             handleSellClick(player, event.getSlot(), title);
+
+        } else if (title.equals(GeneralShopGUI.TITLE)) {
+            event.setCancelled(true);
+            handleGeneralShopClick(player, event.getSlot());
+
+        } else if (title.startsWith(GeneralSellGUI.TITLE_PREFIX) && title.endsWith(GeneralSellGUI.TITLE_SUFFIX)) {
+            event.setCancelled(true);
+            handleGeneralSellClick(player, event.getSlot(), title);
         }
     }
 
@@ -78,6 +91,11 @@ public class GUIListener implements Listener {
             compassPage.remove(uuid);
             marketItemPage.remove(uuid);
             seedItemPage.remove(uuid);
+            generalItemPage.remove(uuid);
+        }
+        if (title.equals(GeneralShopGUI.TITLE)
+                || (title.startsWith(GeneralSellGUI.TITLE_PREFIX) && title.endsWith(GeneralSellGUI.TITLE_SUFFIX))) {
+            activeGeneralEntry.remove(uuid);
         }
     }
 
@@ -92,6 +110,9 @@ public class GUIListener implements Listener {
         } else if (slot == MainMenuGUI.SLOT_MARKET) {
             marketItemPage.put(player.getUniqueId(), 0);
             plugin.getMarketGUI().open(player, 0, 0);
+        } else if (slot == MainMenuGUI.SLOT_GENERAL) {
+            generalItemPage.put(player.getUniqueId(), 0);
+            plugin.getGeneralShopGUI().open(player, 0);
         }
     }
 
@@ -260,5 +281,88 @@ public class GUIListener implements Listener {
         final CropEntry finalCrop = crop;
         Bukkit.getScheduler().runTask(plugin, () ->
             plugin.getCropSellGUI().open(player, finalCrop));
+    }
+
+    // ──────────────────────────────────────────
+    //  일반 농작물 판매 목록 GUI
+    // ──────────────────────────────────────────
+
+    private void handleGeneralShopClick(Player player, int slot) {
+        int page = generalItemPage.getOrDefault(player.getUniqueId(), 0);
+
+        if (slot == GeneralShopGUI.SLOT_BACK) {
+            generalItemPage.remove(player.getUniqueId());
+            plugin.getMainMenuGUI().open(player);
+            return;
+        }
+        if (slot == GeneralShopGUI.SLOT_PREV) {
+            int newPage = Math.max(0, page - 1);
+            generalItemPage.put(player.getUniqueId(), newPage);
+            plugin.getGeneralShopGUI().open(player, newPage);
+            return;
+        }
+        if (slot == GeneralShopGUI.SLOT_NEXT) {
+            int newPage = page + 1;
+            generalItemPage.put(player.getUniqueId(), newPage);
+            plugin.getGeneralShopGUI().open(player, newPage);
+            return;
+        }
+
+        int index = plugin.getGeneralShopGUI().slotToEntryIndex(slot, page);
+        if (index < 0) return;
+
+        var items = plugin.getConfigManager().getGeneralShopItems();
+        if (index >= items.size()) return;
+
+        GeneralShopEntry entry = items.get(index);
+        activeGeneralEntry.put(player.getUniqueId(), entry);
+        plugin.getGeneralSellGUI().open(player, entry);
+    }
+
+    // ──────────────────────────────────────────
+    //  일반 농작물 판매 세부 GUI
+    // ──────────────────────────────────────────
+
+    private void handleGeneralSellClick(Player player, int slot, String title) {
+        if (slot == GeneralSellGUI.SLOT_BACK) {
+            activeGeneralEntry.remove(player.getUniqueId());
+            int page = generalItemPage.getOrDefault(player.getUniqueId(), 0);
+            plugin.getGeneralShopGUI().open(player, page);
+            return;
+        }
+        if (slot != GeneralSellGUI.SLOT_SELL) return;
+
+        GeneralShopEntry entry = activeGeneralEntry.get(player.getUniqueId());
+        if (entry == null) {
+            // 타이틀에서 복원
+            String rawName = GeneralSellGUI.extractEntryName(title);
+            for (GeneralShopEntry e : plugin.getConfigManager().getGeneralShopItems()) {
+                if (e.getDisplayName().replaceAll("§[0-9a-fk-or]", "").equals(rawName)) {
+                    entry = e;
+                    break;
+                }
+            }
+            if (entry == null) return;
+            activeGeneralEntry.put(player.getUniqueId(), entry);
+        }
+
+        SellResult result = plugin.getMarketManager().sellGeneral(player, entry);
+
+        if (result.success()) {
+            player.sendMessage(String.format(
+                "§a[일반판매] §f%s %d개 판매 완료",
+                entry.getDisplayName(), result.amount()
+            ));
+            player.sendMessage(String.format(
+                "§7  판매가 §f%,.0f§7원  §8│  §7세금 §c-%,.0f§7원  §8│  §7실수령 §a+%,.0f§7원",
+                result.grossPayment(), result.taxAmount(), result.netPayment()
+            ));
+        } else {
+            player.sendMessage("§c[일반판매] " + result.message());
+        }
+
+        final GeneralShopEntry finalEntry = entry;
+        Bukkit.getScheduler().runTask(plugin, () ->
+            plugin.getGeneralSellGUI().open(player, finalEntry));
     }
 }

@@ -171,6 +171,245 @@ invisible-hand:
 
 
 # ======================================================
+#   일반 농작물 판매 상점 (general-shop)
+# ======================================================
+# 가격이 고정된 일반 판매 상점입니다.
+# 시장 가격 변동과 무관하게 항상 기준가(또는 직접 지정한 가격)로 판매합니다.
+#
+# enabled                 : true 면 메인 메뉴에 상점 버튼이 나타납니다.
+# permission.enabled      : true 면 아래 node 권한을 보유한 플레이어만 상점에 접근합니다.
+# permission.node         : 접근 권한 노드 (permission.enabled: true 일 때만 사용)
+#
+# [아이템 항목]
+#   display-name   : GUI에 표시될 이름 (색상 코드 지원)
+#   icon           : GUI 아이콘 (Material 이름)
+#   item-type      : VANILLA / ITEMSADDER / MMOITEMS (생략 시 자동 감지)
+#   item-id        : 아이템 식별자
+#   mmoitems-type  : MMOItems 타입 (MMOITEMS 일 때만 사용)
+#   sell-amount    : 1회 판매 수량
+#   use-base-price : true 면 아래 crop-ref/grade-ref 의 base-price 를 가격으로 사용
+#   crop-ref       : 참조할 crops 섹션의 작물 ID (use-base-price: true 일 때)
+#   grade-ref      : 참조할 등급 (normal / silver / gold)
+#   price          : use-base-price: false 일 때 직접 지정할 가격
+#   enabled        : false 면 이 항목은 상점에 표시되지 않음
+general-shop:
+  enabled: true
+  permission:
+    enabled: true
+    node: "tt_job_farmer_1"
+  items:
+    tomato_normal:
+      display-name: "§d토마토 (일반)"
+      icon: APPLE
+      item-id: "TOMATO"
+      mmoitems-type: "COOKINGITEM"
+      sell-amount: 64
+      use-base-price: true
+      crop-ref: tomato
+      grade-ref: normal
+      enabled: true
+    tomato_silver:
+      display-name: "§d토마토 (은)"
+      icon: APPLE
+      item-id: "customcrops:tomato_silver_star"
+      sell-amount: 8
+      use-base-price: true
+      crop-ref: tomato
+      grade-ref: silver
+      enabled: true
+    corn_normal:
+      display-name: "§d옥수수 (일반)"
+      icon: WHEAT
+      item-id: "CORN"
+      mmoitems-type: "COOKINGITEM"
+      sell-amount: 64
+      use-base-price: true
+      crop-ref: corn
+      grade-ref: normal
+      enabled: true
+    corn_silver:
+      display-name: "§d옥수수 (은)"
+      icon: WHEAT
+      item-id: "customcrops:corn_silver_star"
+      sell-amount: 8
+      use-base-price: true
+      crop-ref: corn
+      grade-ref: silver
+      enabled: true
+    hop_normal:
+      display-name: "§d홉 (일반)"
+      icon: VINE
+      item-id: "HOP"
+      mmoitems-type: "COOKINGITEM"
+      sell-amount: 64
+      use-base-price: true
+      crop-ref: hop
+      grade-ref: normal
+      enabled: true
+    hop_silver:
+      display-name: "§d홉 (은)"
+      icon: VINE
+      item-id: "customcrops:hop_silver_star"
+      sell-amount: 8
+      use-base-price: true
+      crop-ref: hop
+      grade-ref: silver
+      enabled: true
+    grape_normal:
+      display-name: "§d포도 (일반)"
+      icon: PURPLE_DYE
+      item-id: "GRAPE"
+      mmoitems-type: "COOKINGITEM"
+      sell-amount: 64
+      use-base-price: true
+      crop-ref: grape
+      grade-ref: normal
+      enabled: true
+    grape_silver:
+      display-name: "§d포도 (은)"
+      icon: PURPLE_DYE
+      item-id: "customcrops:grape_silver_star"
+      sell-amount: 8
+      use-base-price: true
+      crop-ref: grape
+      grade-ref: silver
+      enabled: true
+    pitaya_normal:
+      display-name: "§d드래곤 후르츠 (일반)"
+      icon: MAGENTA_DYE
+      item-id: "PITAYA"
+      mmoitems-type: "COOKINGITEM"
+      sell-amount: 64
+      use-base-price: true
+      crop-ref: pitaya
+      grade-ref: normal
+      enabled: true
+    pitaya_silver:
+      display-name: "§d드래곤 후르츠 (은)"
+      icon: MAGENTA_DYE
+      item-id: "customcrops:pitaya_silver_star"
+      sell-amount: 8
+      use-base-price: true
+      crop-ref: pitaya
+      grade-ref: silver
+      enabled: true
+    pakchoi_normal:
+      display-name: "§d청경채 (일반)"
+      icon: CACTUS
+      item-id: "PAKCHOI"
+      mmoitems-type: "COOKINGITEM"
+      sell-amount: 64
+      use-base-price: true
+      crop-ref: pakchoi
+      grade-ref: normal
+      enabled: true
+    pakchoi_silver:
+      display-name: "§d청경채 (은)"
+      icon: CACTUS
+      item-id: "customcrops:chinese_cabbage_silver_star"
+      sell-amount: 8
+      use-base-price: true
+      crop-ref: pakchoi
+      grade-ref: silver
+      enabled: true
+    pepper_normal:
+      display-name: "§d고추 (일반)"
+      icon: BLAZE_ROD
+      item-id: "PEPPER"
+      mmoitems-type: "COOKINGITEM"
+      sell-amount: 64
+      use-base-price: true
+      crop-ref: pepper
+      grade-ref: normal
+      enabled: true
+    pepper_silver:
+      display-name: "§d고추 (은)"
+      icon: BLAZE_ROD
+      item-id: "customcrops:pepper_silver_star"
+      sell-amount: 8
+      use-base-price: true
+      crop-ref: pepper
+      grade-ref: silver
+      enabled: true
+    garlic_normal:
+      display-name: "§d마늘 (일반)"
+      icon: SUGAR
+      item-id: "GARLIC"
+      mmoitems-type: "COOKINGITEM"
+      sell-amount: 64
+      use-base-price: true
+      crop-ref: garlic
+      grade-ref: normal
+      enabled: true
+    garlic_silver:
+      display-name: "§d마늘 (은)"
+      icon: SUGAR
+      item-id: "customcrops:garlic_silver_star"
+      sell-amount: 8
+      use-base-price: true
+      crop-ref: garlic
+      grade-ref: silver
+      enabled: true
+    eggplant_normal:
+      display-name: "§d가지 (일반)"
+      icon: CHORUS_FRUIT
+      item-id: "EGGPLANT"
+      mmoitems-type: "COOKINGITEM"
+      sell-amount: 64
+      use-base-price: true
+      crop-ref: eggplant
+      grade-ref: normal
+      enabled: true
+    eggplant_silver:
+      display-name: "§d가지 (은)"
+      icon: CHORUS_FRUIT
+      item-id: "customcrops:eggplant_silver_star"
+      sell-amount: 8
+      use-base-price: true
+      crop-ref: eggplant
+      grade-ref: silver
+      enabled: true
+    pineapple_normal:
+      display-name: "§d파인애플 (일반)"
+      icon: HONEYCOMB
+      item-id: "PINEAPPLE"
+      mmoitems-type: "COOKINGITEM"
+      sell-amount: 64
+      use-base-price: true
+      crop-ref: pineapple
+      grade-ref: normal
+      enabled: true
+    pineapple_silver:
+      display-name: "§d파인애플 (은)"
+      icon: HONEYCOMB
+      item-id: "customcrops:pineapple_silver_star"
+      sell-amount: 8
+      use-base-price: true
+      crop-ref: pineapple
+      grade-ref: silver
+      enabled: true
+    cabbage_normal:
+      display-name: "§a양배추 (일반)"
+      icon: LIME_WOOL
+      item-id: "CABBAGE"
+      mmoitems-type: "COOKINGITEM"
+      sell-amount: 64
+      use-base-price: true
+      crop-ref: cabbage
+      grade-ref: normal
+      enabled: true
+    cabbage_silver:
+      display-name: "§a양배추 (은)"
+      icon: LIME_WOOL
+      item-id: "customcrops:cabbage_silver_star"
+      sell-amount: 8
+      use-base-price: true
+      crop-ref: cabbage
+      grade-ref: silver
+      enabled: true
+
+
+# ======================================================
 #   작물 목록 (crops)
 # ======================================================
 # 시장에 등록된 작물과 각 등급별 아이템·가격을 설정합니다.

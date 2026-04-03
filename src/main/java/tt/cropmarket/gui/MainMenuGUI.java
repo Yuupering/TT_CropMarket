@@ -28,8 +28,9 @@ public class MainMenuGUI {
 
     public static final String TITLE = "§6작물 상점";
 
-    public static final int SLOT_SEEDS  = 11;
-    public static final int SLOT_MARKET = 15;
+    public static final int SLOT_SEEDS   = 11;
+    public static final int SLOT_GENERAL = 13;
+    public static final int SLOT_MARKET  = 15;
 
     private final CropMarketPlugin plugin;
 
@@ -69,6 +70,25 @@ public class MainMenuGUI {
             "",
             "§e» 클릭하여 입장"
         ));
+
+        // 일반 농작물 판매 버튼 (enabled + permission 체크)
+        var cfg = plugin.getConfigManager();
+        if (cfg.isGeneralShopEnabled()) {
+            boolean hasAccess = !cfg.isGeneralShopPermEnabled()
+                    || player.hasPermission(cfg.getGeneralShopPermNode());
+            if (hasAccess) {
+                int itemCount = cfg.getGeneralShopItems().size();
+                inv.setItem(SLOT_GENERAL, makeItem(
+                    Material.GOLD_INGOT,
+                    "§a일반 농작물 판매",
+                    "§7고정 가격으로 농작물을 판매합니다.",
+                    "§8──────────────",
+                    "§7등록 아이템: §f" + itemCount + "종",
+                    "",
+                    "§a» 클릭하여 입장"
+                ));
+            }
+        }
 
         player.openInventory(inv);
     }

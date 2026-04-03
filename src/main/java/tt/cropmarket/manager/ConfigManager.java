@@ -7,12 +7,19 @@ import org.bukkit.configuration.ConfigurationSection;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Collections;
 
 public class ConfigManager {
 
     private final CropMarketPlugin plugin;
 
-    private final List<CropEntry> crops = new ArrayList<>();
+    private final List<CropEntry>        crops            = new ArrayList<>();
+    private final List<GeneralShopEntry> generalShopItems = new ArrayList<>();
+
+    // 일반 농작물 판매 상점
+    private boolean generalShopEnabled;
+    private boolean generalShopPermEnabled;
+    private String  generalShopPermNode;
 
     // 회복 인터벌 (분) - 등급별 독립 운영
     private int normalRecoveryMinMinutes,   normalRecoveryMaxMinutes;
@@ -66,6 +73,7 @@ public class ConfigManager {
     public void reload() {
         plugin.reloadConfig();
         crops.clear();
+        generalShopItems.clear();
 
         var cfg = plugin.getConfig();
 
@@ -146,6 +154,69 @@ public class ConfigManager {
             }
 
             crops.add(entry);
+        }
+
+        // 일반 농작물 판매 상점 로드
+        generalShopEnabled     = cfg.getBoolean("general-shop.enabled", false);
+        generalShopPermEnabled = cfg.getBoolean("general-shop.permission.enabled", false);
+        generalShopPermNode    = cfg.getString("general-shop.permission.node", "");
+
+        ConfigurationSection gsItems = cfg.getConfigurationSection("general-shop.items");
+        if (gsItems != null) {
+            for (String key : gsItems.getKeys(false)) {
+                ConfigurationSection is = gsItems.getConfigurationSection(key);
+                if (is == null || !is.getBoolean("enabled", true)) continue;
+
+                String   displayName = is.getString("display-name", key);
+                Material icon        = Material.matchMaterial(is.getString("icon", "PAPER"));
+                if (icon == null) icon = Material.PAPER;
+
+                String itemId    = is.getString("item-id", "");
+                String mmoType   = is.getString("mmoitems-type", "MATERIAL");
+                int    sellAmt   = is.getInt("sell-amount", 1);
+
+                // 아이템 타입 자동 감지
+                ItemType itemType;
+                String typeStr = is.getString("item-type", "").toUpperCase();
+                if (!typeStr.isEmpty()) {
+                    itemType = switch (typeStr) {
+                        case "ITEMSADDER" -> ItemType.ITEMSADDER;
+                        case "MMOITEMS"   -> ItemType.MMOITEMS;
+                        default           -> ItemType.VANILLA;
+                    };
+                } else if (is.contains("mmoitems-type")) {
+                    itemType = ItemType.MMOITEMS;
+                } else if (itemId.contains(":")) {
+                    itemType = ItemType.ITEMSADDER;
+                } else {
+                    itemType = ItemType.VANILLA;
+                }
+
+                // 가격 결정
+                double price;
+                if (is.getBoolean("use-base-price", false)) {
+                    String cropRef  = is.getString("crop-ref", "");
+                    String gradeRef = is.getString("grade-ref", "normal").toUpperCase();
+                    CropEntry cropEntry = getCrop(cropRef);
+                    if (cropEntry != null) {
+                        try {
+                            ItemGrade grade = ItemGrade.valueOf(gradeRef);
+                            GradeConfig gc  = cropEntry.getGradeConfig(grade);
+                            price = (gc != null) ? gc.getBasePrice() : is.getDouble("price", 0.0);
+                        } catch (IllegalArgumentException e) {
+                            price = is.getDouble("price", 0.0);
+                        }
+                    } else {
+                        price = is.getDouble("price", 0.0);
+                    }
+                } else {
+                    price = is.getDouble("price", 0.0);
+                }
+
+                generalShopItems.add(new GeneralShopEntry(
+                    key, displayName, icon, itemType, itemId, mmoType, sellAmt, price
+                ));
+            }
         }
     }
 
@@ -261,4 +332,9 @@ public class ConfigManager {
     public boolean isYieldAdjustmentEnabled() { return yieldAdjustmentEnabled; }
     public boolean isInvisibleHandEnabled()   { return invisibleHandEnabled; }
     public double  getInvisibleHandChancePct(){ return invisibleHandChancePct; }
+
+    public List<GeneralShopEntry> getGeneralShopItems()    { return Collections.unmodifiableList(generalShopItems); }
+    public boolean isGeneralShopEnabled()                  { return generalShopEnabled; }
+    public boolean isGeneralShopPermEnabled()              { return generalShopPermEnabled; }
+    public String  getGeneralShopPermNode()                { return generalShopPermNode; }
 }
