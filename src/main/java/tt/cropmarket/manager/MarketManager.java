@@ -148,6 +148,7 @@ public class MarketManager {
                 double maxPrice = gc.getMaxPrice();
                 double newPrice = minPrice + random.nextDouble() * (maxPrice - minPrice);
                 newPrice = Math.max(gc.getMinPrice(), Math.min(newPrice, maxPrice));
+                gd.setCrashRecoveryAt(0L); // 붕괴 상태 클리어
                 gd.loadPrice(newPrice);
             }
         }
@@ -171,6 +172,11 @@ public class MarketManager {
 
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
             data.setCrashRecoveryAt(0L);
+            // 보이지 않는 손 등으로 이미 가격이 복구된 경우 메시지 생략
+            if (data.getCurrentPrice() > 0) {
+                plugin.getDataManager().save();
+                return;
+            }
             data.loadPrice(targetPrice);
             plugin.getDataManager().save();
             plugin.getMarketLogger().logCrashRecovery(
@@ -223,6 +229,11 @@ public class MarketManager {
                         fgc.getMaxPrice()
                     );
                     fgd.setCrashRecoveryAt(0L);
+                    // 보이지 않는 손 등으로 이미 가격이 복구된 경우 메시지 생략
+                    if (fgd.getCurrentPrice() > 0) {
+                        plugin.getDataManager().save();
+                        return;
+                    }
                     fgd.loadPrice(targetPrice);
                     plugin.getDataManager().save();
                     plugin.getMarketLogger().logCrashRecovery(
