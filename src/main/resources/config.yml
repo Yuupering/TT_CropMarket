@@ -156,6 +156,35 @@ yield-adjustment:
 
 
 # ======================================================
+#   수확량 기반 붕괴 확률 보정 (crash-chance-adjustment)
+# ======================================================
+# 작물의 최대 수확량(max-harvest)에 따라 grade-settings 의
+# 붕괴 확률(crash-chance-min-pct, crash-chance-max-pct)을 자동으로 조정합니다.
+# 수확량이 많을수록(고가치 작물일수록) 붕괴 확률이 낮아집니다.
+#
+# enabled          : true 면 보정 활성화 / false 면 모든 작물에 동일 확률 적용
+# base-max-harvest : 보정 기준이 되는 최대 수확량 (고추 기준 = 4)
+# base-max-harvest : 보정 기준이 되는 최대 수확량 (고추 기준 = 4)
+# enabled          : 각 등급별로 보정 활성화 여부를 개별 설정
+# per-harvest-step : 수확량 1 증가당 확률에 곱하는 감소 비율 (등급별 독립)
+#                   multiplier = 1.0 - (max-harvest 차이) × per-harvest-step
+#                   예) step=0.2, base=4, 작물max=8 (diff=+4) 이면
+#                       multiplier = 1.0 - 4×0.2 = 0.2 → 확률 × 20%
+#                   수확량이 base보다 낮으면 multiplier > 1 (확률 증가)
+crash-chance-adjustment:
+  base-max-harvest: 4
+  normal:
+    enabled: true
+    per-harvest-step: 0.2
+  silver:
+    enabled: true
+    per-harvest-step: 0.2
+  gold:
+    enabled: true
+    per-harvest-step: 0.2
+
+
+# ======================================================
 #   보이지 않는 손 (invisible-hand)
 # ======================================================
 # 시장 붕괴 발생 시 일정 확률로 "보이지 않는 손"이 발동합니다.

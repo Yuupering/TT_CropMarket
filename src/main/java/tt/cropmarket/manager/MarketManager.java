@@ -73,7 +73,7 @@ public class MarketManager {
             newPrice = Math.max(newPrice, config.getMinPrice());
 
             // 크래시 체크: 임계값 이상일 때만 확률 발생 (가격이 높을수록 확률 증가)
-            double[] crashSettings = cfg.getCrashSettings(grade);
+            double[] crashSettings = cfg.getCrashSettings(grade, crop.getMaxHarvest());
             double crashThreshold  = config.getBasePrice() * (crashSettings[0] / 100.0);
             double minChance       = crashSettings[1] / 100.0;
             double maxChance       = crashSettings[2] / 100.0;
@@ -181,6 +181,61 @@ public class MarketManager {
                 crop.getDisplayName(), grade.getDisplayName(), targetPrice
             ));
         }, delayTicks);
+    }
+
+    // ──────────────────────────────────────────
+    //  서버 재시작 후 붕괴 복구 재등록
+    // ──────────────────────────────────────────
+
+    /**
+     * 서버 재시작 시 호출 — 가격=0 이고 crashRecoveryAt > 0 인 작물의
+     * 복구 타스크를 재등록합니다. 이미 지난 시각이면 즉시 복구합니다.
+     */
+    public void rescheduleCrashedCrops() {
+        long now = System.currentTimeMillis();
+        for (CropEntry crop : plugin.getConfigManager().getCrops()) {
+            for (ItemGrade grade : ItemGrade.values()) {
+                GradeConfig config = crop.getGradeConfig(grade);
+                GradeData   data   = crop.getGradeData(grade);
+                if (config == null || data == null) continue;
+                if (data.getCurrentPrice() > 0) continue;
+
+                long recoveryAt = data.getCrashRecoveryAt();
+
+                if (recoveryAt <= 0) {
+                    // crashRecoveryAt 미등록 → 지금부터 delay 만큼 후 복구
+                    long newRecoveryAt = now + (long) plugin.getConfigManager().getCrashRecoveryDelayHours() * 3600L * 1000L;
+                    data.setCrashRecoveryAt(newRecoveryAt);
+                    recoveryAt = newRecoveryAt;
+                }
+
+                long remainingMs   = Math.max(0L, recoveryAt - now);
+                long remainingTicks = remainingMs / 50L;
+
+                final CropEntry  fc = crop;
+                final ItemGrade  fg = grade;
+                final GradeConfig fgc = config;
+                final GradeData  fgd = data;
+
+                plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+                    double targetPrice = Math.min(
+                        fgc.getBasePrice() * plugin.getConfigManager().getCrashRecoveryMultiplier(fg),
+                        fgc.getMaxPrice()
+                    );
+                    fgd.setCrashRecoveryAt(0L);
+                    fgd.loadPrice(targetPrice);
+                    plugin.getDataManager().save();
+                    plugin.getMarketLogger().logCrashRecovery(
+                        fc.getDisplayName(), fg.getDisplayName(), targetPrice
+                    );
+                    plugin.getServer().broadcastMessage(String.format(
+                        "§a[시장 회복] §r%s %s§r등급 가격이 §a%,.0f§r원으로 회복되었습니다.",
+                        fc.getDisplayName(), fg.getDisplayName(), targetPrice
+                    ));
+                }, remainingTicks);
+            }
+        }
+        plugin.getDataManager().save();
     }
 
     // ──────────────────────────────────────────

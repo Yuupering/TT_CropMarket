@@ -65,6 +65,15 @@ public class ConfigManager {
     private boolean invisibleHandEnabled;
     private double  invisibleHandChancePct;
 
+    // 수확량 기반 붕괴 확률 보정 (등급별 독립)
+    private int     crashChanceAdjBaseMaxHarvest;
+    private boolean crashChanceAdjNormalEnabled;
+    private double  crashChanceAdjNormalStep;
+    private boolean crashChanceAdjSilverEnabled;
+    private double  crashChanceAdjSilverStep;
+    private boolean crashChanceAdjGoldEnabled;
+    private double  crashChanceAdjGoldStep;
+
     public ConfigManager(CropMarketPlugin plugin) {
         this.plugin = plugin;
         reload();
@@ -126,6 +135,14 @@ public class ConfigManager {
 
         invisibleHandEnabled   = cfg.getBoolean("invisible-hand.enabled", false);
         invisibleHandChancePct = cfg.getDouble("invisible-hand.chance-pct", 10.0);
+
+        crashChanceAdjBaseMaxHarvest  = cfg.getInt("crash-chance-adjustment.base-max-harvest", 4);
+        crashChanceAdjNormalEnabled   = cfg.getBoolean("crash-chance-adjustment.normal.enabled", false);
+        crashChanceAdjNormalStep      = cfg.getDouble("crash-chance-adjustment.normal.per-harvest-step", 0.1);
+        crashChanceAdjSilverEnabled   = cfg.getBoolean("crash-chance-adjustment.silver.enabled", false);
+        crashChanceAdjSilverStep      = cfg.getDouble("crash-chance-adjustment.silver.per-harvest-step", 0.1);
+        crashChanceAdjGoldEnabled     = cfg.getBoolean("crash-chance-adjustment.gold.enabled", false);
+        crashChanceAdjGoldStep        = cfg.getDouble("crash-chance-adjustment.gold.per-harvest-step", 0.1);
 
         ConfigurationSection cropsSection = cfg.getConfigurationSection("crops");
         if (cropsSection == null) return;
@@ -302,6 +319,37 @@ public class ConfigManager {
             case SILVER -> new double[]{silverCrashThresholdPct, silverCrashChanceMinPct, silverCrashChanceMaxPct};
             case GOLD   -> new double[]{goldCrashThresholdPct,   goldCrashChanceMinPct,   goldCrashChanceMaxPct};
         };
+    }
+
+    /**
+     * 수확량 보정 적용 크래시 설정 [thresholdPct, minChancePct, maxChancePct]
+     * 해당 등급의 보정이 비활성화되어 있거나 maxHarvest <= 0 이면 기본 설정 반환
+     */
+    public double[] getCrashSettings(ItemGrade grade, int maxHarvest) {
+        double[] base = getCrashSettings(grade);
+
+        boolean enabled = switch (grade) {
+            case NORMAL -> crashChanceAdjNormalEnabled;
+            case SILVER -> crashChanceAdjSilverEnabled;
+            case GOLD   -> crashChanceAdjGoldEnabled;
+        };
+        if (!enabled || maxHarvest <= 0) return base;
+
+        double step = switch (grade) {
+            case NORMAL -> crashChanceAdjNormalStep;
+            case SILVER -> crashChanceAdjSilverStep;
+            case GOLD   -> crashChanceAdjGoldStep;
+        };
+
+        int diff = maxHarvest - crashChanceAdjBaseMaxHarvest;
+        if (diff == 0) return base;
+
+        double multiplier = Math.max(0.01, 1.0 - diff * step);
+        double minAdj = Math.round(base[1] * multiplier * 100.0) / 100.0;
+        double maxAdj = Math.round(base[2] * multiplier * 100.0) / 100.0;
+        minAdj = Math.max(0.1, minAdj);
+        maxAdj = Math.max(minAdj + 0.1, maxAdj);
+        return new double[]{base[0], minAdj, maxAdj};
     }
 
     public int    getCrashRecoveryDelayHours()       { return crashRecoveryDelayHours; }

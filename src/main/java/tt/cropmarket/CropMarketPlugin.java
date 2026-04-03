@@ -61,6 +61,7 @@ public class CropMarketPlugin extends JavaPlugin {
         generalSellGUI    = new GeneralSellGUI(this);
 
         dataManager.load();
+        marketManager.rescheduleCrashedCrops();
 
         recoveryScheduler = new RecoveryScheduler(this);
         recoveryScheduler.start();

@@ -14,6 +14,9 @@
 - **시장 붕괴** — 고가 구간에서 판매 시 확률적으로 가격 폭락, 일정 시간 후 자동 복구
 - **보이지 않는 손** — 시장 붕괴 시 확률적으로 모든 작물 가격을 무작위 재조정
 - **수확량 기반 가격 보정** — 최대 수확량이 많은 작물일수록 판매 시 하락폭 감소
+- **수확량 기반 붕괴 확률 보정** — 등급별 독립 설정, 수확량이 많을수록 붕괴 확률 감소
+- **일반 농작물 판매 상점** — 고정 가격 판매 상점, 권한 설정 지원
+- **서버 재시작 후 붕괴 복구 유지** — 재시작 시에도 붕괴된 작물의 복구 타이머 자동 재등록
 - **세금 시스템** — 기본 세율 / 권한 보유자 감면 세율 지원
 - **씨앗 상점** — 수량 선택형 씨앗 구매 GUI 지원
 - **페이지네이션** — 페이지당 28개, 초과 시 이전/다음 페이지 버튼 자동 생성
@@ -52,6 +55,7 @@
 | `/농작물` | 농산물 시장 GUI 열기 | `cropmarket.use` (기본: 모든 플레이어) |
 | `/농작물관리 reload` | 설정 파일 리로드 | `cropmarket.admin` (기본: OP) |
 | `/농작물관리 info` | 현재 가격 정보 출력 | `cropmarket.admin` |
+| `/농작물관리 crash` | 현재 붕괴된 작물 및 복구 예정 시간 확인 | `cropmarket.admin` |
 | `/농작물관리 reset <작물> <등급>` | 특정 작물 가격 초기화 | `cropmarket.admin` |
 | `/농작물관리 set <작물> <등급> <가격>` | 특정 작물 가격 직접 설정 | `cropmarket.admin` |
 
@@ -143,6 +147,21 @@ invisible-hand:
   enabled: true
   chance-pct: 10          # 시장 붕괴 1회당 발동 확률 (%)
 
+# 수확량 기반 붕괴 확률 보정 — 등급별로 독립 설정
+# multiplier = 1.0 - (max-harvest 차이) × per-harvest-step
+# 수확량이 많을수록 붕괴 확률 감소, 적을수록 증가
+crash-chance-adjustment:
+  base-max-harvest: 4     # 보정 기준 수확량 (고추 기준)
+  normal:
+    enabled: true
+    per-harvest-step: 0.2
+  silver:
+    enabled: true
+    per-harvest-step: 0.2
+  gold:
+    enabled: true
+    per-harvest-step: 0.2
+
 # 세금
 tax:
   default-rate: 10.0
@@ -160,6 +179,34 @@ crops:
   pepper:
     max-harvest: 4   # 기준 작물 (보정 없음)
     ...
+```
+
+### 일반 농작물 판매 상점
+
+시장 가격 변동 없이 고정 가격으로 판매하는 별도 상점입니다.
+
+```yaml
+general-shop:
+  enabled: true
+  permission:
+    enabled: false          # true 시 아래 권한 노드 보유자만 접근 가능
+    node: "cropmarket.general"
+  items:
+    tomato_normal:
+      enabled: true
+      display-name: "§f방울토마토 (일반)"
+      icon: RED_DYE
+      item-id: "customcrops:tomato"
+      sell-amount: 64
+      price: 800.0           # 고정 판매 가격 (원)
+```
+
+`use-base-price: true` + `crop-ref` / `grade-ref` 를 사용하면 해당 작물 등급의 기준가를 자동으로 참조합니다.
+
+```yaml
+      use-base-price: true
+      crop-ref: tomato       # 작물 ID
+      grade-ref: normal      # normal / silver / gold
 ```
 
 > 각 항목에 대한 상세 설명은 config.yml 내 주석을 참고하세요.
