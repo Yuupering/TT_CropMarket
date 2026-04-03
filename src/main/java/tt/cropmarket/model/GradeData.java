@@ -55,7 +55,7 @@ public class GradeData {
         if (minutes >= 180) return "§c⚠ 시장이 붕괴 되었습니다!";
         if (minutes >= 120) return "§e⚠ 시장이 회복중입니다..";
         if (minutes >= 60)  return "§6⚠ 시장의 공기가 달라지고 있습니다..";
-        if (minutes >= 30)  return "§a⚠ 회복의 기운이 느껴집니다!";
+        if (minutes >= 30)  return "§a⚠ 상인들이 돌아올 준비를 하고 있습니다.";
         return "§a⚡ 거래 재개가 임박했습니다!";
     }
 }
