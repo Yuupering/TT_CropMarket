@@ -130,9 +130,49 @@ public class MarketCommand implements CommandExecutor, TabCompleter {
                         crop.getDisplayName(), grade.getDisplayName(), clamped));
             }
 
+            // ── crash ───────────────────────────────
+            case "crash" -> {
+                boolean anyFound = false;
+                sender.sendMessage("§6[CropMarket] §e시장 붕괴 현황:");
+
+                for (CropEntry crop : plugin.getConfigManager().getCrops()) {
+                    for (ItemGrade grade : ItemGrade.values()) {
+                        GradeData data = crop.getGradeData(grade);
+                        if (data == null || data.getCurrentPrice() > 0) continue;
+
+                        anyFound = true;
+                        long recoveryAt = data.getCrashRecoveryAt();
+                        String timeStr;
+                        if (recoveryAt <= 0) {
+                            timeStr = "§7복구 시각 미등록";
+                        } else {
+                            long remaining = Math.max(0L, recoveryAt - System.currentTimeMillis());
+                            timeStr = formatRemaining(remaining);
+                        }
+                        sender.sendMessage(String.format("  §c%s %s§c등급 §8→ §f복구까지 %s",
+                                crop.getDisplayName(), grade.getDisplayName(), timeStr));
+                    }
+                }
+
+                if (!anyFound) {
+                    sender.sendMessage("  §a현재 붕괴된 작물이 없습니다.");
+                }
+            }
+
             default -> sendAdminHelp(sender);
         }
         return true;
+    }
+
+    private String formatRemaining(long ms) {
+        if (ms <= 0) return "§a곧 복구";
+        long totalSec = ms / 1000;
+        long hours   = totalSec / 3600;
+        long minutes = (totalSec % 3600) / 60;
+        long seconds = totalSec % 60;
+        if (hours > 0)   return String.format("§e%d시간 %d분", hours, minutes);
+        if (minutes > 0) return String.format("§a%d분 %d초", minutes, seconds);
+        return String.format("§a%d초", seconds);
     }
 
     private void resetAll() {
@@ -164,6 +204,7 @@ public class MarketCommand implements CommandExecutor, TabCompleter {
         sender.sendMessage("§6[농작물관리] §e관리 명령어:");
         sender.sendMessage("§7/농작물관리 reload §8- 설정 재로드");
         sender.sendMessage("§7/농작물관리 info §8- 현재 가격 현황");
+        sender.sendMessage("§7/농작물관리 crash §8- 붕괴 작물 복구 시간 확인");
         sender.sendMessage("§7/농작물관리 reset §8- 전체 가격 초기화");
         sender.sendMessage("§7/농작물관리 reset <작물ID> [등급] §8- 특정 가격 초기화");
         sender.sendMessage("§7/농작물관리 set <작물ID> <등급> <가격> §8- 가격 직접 설정");
@@ -176,7 +217,7 @@ public class MarketCommand implements CommandExecutor, TabCompleter {
         // /농작물관리 명령어 자동완성
         if (cmdName.equals("농작물관리")) {
             if (args.length == 1) {
-                return List.of("reload", "info", "reset", "set");
+                return List.of("reload", "info", "crash", "reset", "set");
             }
 
             if (args.length >= 2) {
