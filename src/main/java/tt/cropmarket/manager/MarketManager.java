@@ -144,7 +144,7 @@ public class MarketManager {
                 GradeData   gd = c.getGradeData(g);
                 if (gc == null || gd == null) continue;
 
-                double minPrice = gc.getBasePrice() * 0.5;
+                double minPrice = gc.getBasePrice() * cfg.getInvisibleHandMinMultiplier();
                 double maxPrice = gc.getMaxPrice();
                 double newPrice = minPrice + random.nextDouble() * (maxPrice - minPrice);
                 newPrice = Math.max(gc.getMinPrice(), Math.min(newPrice, maxPrice));
