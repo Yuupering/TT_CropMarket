@@ -104,20 +104,30 @@ public class CropSellGUI {
 
         double current = data.getCurrentPrice();
         double base    = config.getBasePrice();
-        double trend   = data.getPriceTrend();
-        String arrow   = trend > 0.5 ? "§a▲ 상승 중" : trend < -0.5 ? "§c▼ 하락 중" : "§7─ 안정";
-        double pct     = (current / base) * 100.0;
+        boolean crashed = current <= 0;
 
         List<String> lore = new ArrayList<>();
         lore.add("§8──────────────");
         lore.add("§7판매 단위: §f" + sellAmount + "개");
-        lore.add("§7현재 가격: " + grade.getColorCode()
-                + String.format("%,.0f", current) + "§7원");
-        lore.add("§7기준가 대비: §f" + String.format("%.1f", pct) + "%");
-        lore.add("§7가격 추이:  " + arrow);
-        lore.add("§8──────────────");
-        lore.add("§7최저가: §c" + String.format("%,.0f", config.getMinPrice()) + "§7원");
-        lore.add("§7최고가: §a" + String.format("%,.0f", config.getMaxPrice()) + "§7원");
+
+        if (crashed) {
+            String statusLine = data.getCrashStatusLine();
+            lore.add("§7현재 가격: §c거래 불가 (붕괴)");
+            lore.add("§8──────────────");
+            if (statusLine != null) lore.add(statusLine);
+        } else {
+            double trend = data.getPriceTrend();
+            String arrow = trend > 0.5 ? "§a▲ 상승 중" : trend < -0.5 ? "§c▼ 하락 중" : "§7─ 안정";
+            double pct   = (current / base) * 100.0;
+            lore.add("§7현재 가격: " + grade.getColorCode()
+                    + String.format("%,.0f", current) + "§7원");
+            lore.add("§7기준가 대비: §f" + String.format("%.1f", pct) + "%");
+            lore.add("§7가격 추이:  " + arrow);
+            lore.add("§8──────────────");
+            lore.add("§7최저가: §c" + String.format("%,.0f", config.getMinPrice()) + "§7원");
+            lore.add("§7최고가: §a" + String.format("%,.0f", config.getMaxPrice()) + "§7원");
+        }
+
         lore.add("§8──────────────");
         lore.add("§7보유 수량: §f" + available + "개");
         lore.add("§7판매 가능: §f" + canSell + "묶음");

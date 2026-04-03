@@ -162,12 +162,17 @@ public class MarketGUI {
             if (config == null || data == null) continue;
 
             double current = data.getCurrentPrice();
-            double trend   = data.getPriceTrend();
-            String arrow   = trend > 0.5 ? "§a▲" : trend < -0.5 ? "§c▼" : "§7─";
-
             lore.add(grade.getDisplayName() + " §7등급  [×" + plugin.getConfigManager().getSellAmount(grade) + "]");
-            lore.add("  §7현재가: " + grade.getColorCode()
-                    + String.format("%,.0f", current) + "§7원  " + arrow);
+
+            if (current <= 0) {
+                String statusLine = data.getCrashStatusLine();
+                lore.add("  " + (statusLine != null ? statusLine : "§c거래 불가 (붕괴)"));
+            } else {
+                double trend = data.getPriceTrend();
+                String arrow = trend > 0.5 ? "§a▲" : trend < -0.5 ? "§c▼" : "§7─";
+                lore.add("  §7현재가: " + grade.getColorCode()
+                        + String.format("%,.0f", current) + "§7원  " + arrow);
+            }
         }
 
         lore.add("§8──────────────");

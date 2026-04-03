@@ -9,6 +9,9 @@ public class GradeData {
     private final LinkedList<Double> priceHistory = new LinkedList<>();
     private static final int MAX_HISTORY = 5;
 
+    /** 붕괴 복구 예정 시각 (epoch ms). 0 = 붕괴 상태 아님 */
+    private long crashRecoveryAt = 0L;
+
     public GradeData(double initialPrice) {
         this.currentPrice = initialPrice;
         this.salesCount = 0;
@@ -37,4 +40,22 @@ public class GradeData {
     public int getSalesCount()           { return salesCount; }
     public void incrementSales()         { salesCount++; }
     public void resetSales()             { salesCount = 0; }
+
+    public long getCrashRecoveryAt()           { return crashRecoveryAt; }
+    public void setCrashRecoveryAt(long time)  { this.crashRecoveryAt = time; }
+
+    /**
+     * 붕괴 상태일 때 남은 복구 시간에 따른 상태 문구를 반환합니다.
+     * 붕괴 상태가 아니거나 복구 예정 시각이 없으면 null 반환.
+     */
+    public String getCrashStatusLine() {
+        if (currentPrice > 0 || crashRecoveryAt <= 0) return null;
+        long remaining = Math.max(0L, crashRecoveryAt - System.currentTimeMillis());
+        long minutes   = remaining / 60000L;
+        if (minutes >= 180) return "§c⚠ 시장이 붕괴 되었습니다!";
+        if (minutes >= 120) return "§e⚠ 시장이 회복중입니다..";
+        if (minutes >= 60)  return "§6⚠ 시장의 공기가 달라지고 있습니다..";
+        if (minutes >= 30)  return "§a⚠ 회복의 기운이 느껴집니다!";
+        return "§a⚡ 거래 재개가 임박했습니다!";
+    }
 }

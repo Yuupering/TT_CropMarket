@@ -165,7 +165,11 @@ public class MarketManager {
         double targetPrice       = Math.min(config.getBasePrice() * targetMultiplier, config.getMaxPrice());
         long delayTicks          = delayHours * 3600L * 20L;
 
+        // 복구 예정 시각 기록 (GUI 상태 문구 표시용)
+        data.setCrashRecoveryAt(System.currentTimeMillis() + delayHours * 3600L * 1000L);
+
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+            data.setCrashRecoveryAt(0L);
             data.loadPrice(targetPrice);
             plugin.getDataManager().save();
             plugin.getMarketLogger().logCrashRecovery(

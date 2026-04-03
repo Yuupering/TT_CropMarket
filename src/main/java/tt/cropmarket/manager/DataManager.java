@@ -40,11 +40,13 @@ public class DataManager {
 
                 String path = "crops." + crop.getId() + "." + grade.name().toLowerCase();
 
-                double savedPrice  = dataConfig.getDouble(path + ".current-price", config.getBasePrice());
-                int    savedSales  = dataConfig.getInt(path + ".sales-count", 0);
+                double savedPrice      = dataConfig.getDouble(path + ".current-price", config.getBasePrice());
+                int    savedSales      = dataConfig.getInt(path + ".sales-count", 0);
+                long   savedRecoveryAt = dataConfig.getLong(path + ".crash-recovery-at", 0L);
 
                 data.loadPrice(savedPrice);
                 for (int i = 0; i < savedSales; i++) data.incrementSales();
+                data.setCrashRecoveryAt(savedRecoveryAt);
             }
         }
     }
@@ -63,8 +65,9 @@ public class DataManager {
                     if (data == null) continue;
 
                     String path = "crops." + crop.getId() + "." + grade.name().toLowerCase();
-                    dataConfig.set(path + ".current-price", data.getCurrentPrice());
-                    dataConfig.set(path + ".sales-count",   data.getSalesCount());
+                    dataConfig.set(path + ".current-price",    data.getCurrentPrice());
+                    dataConfig.set(path + ".sales-count",      data.getSalesCount());
+                    dataConfig.set(path + ".crash-recovery-at", data.getCrashRecoveryAt());
                 }
             }
 
