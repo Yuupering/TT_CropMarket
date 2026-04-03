@@ -13,6 +13,7 @@ public class CropEntry {
 
     private String seedItemId = null;
     private double seedPrice  = 100.0;
+    private int    maxHarvest = 0;   // 0 = 미설정 (수확량 보정 비적용)
 
     private final Map<ItemGrade, GradeConfig> gradeConfigs = new EnumMap<>(ItemGrade.class);
     private final Map<ItemGrade, GradeData>   gradeData    = new EnumMap<>(ItemGrade.class);
@@ -33,8 +34,10 @@ public class CropEntry {
     public Material    getIcon()        { return icon; }
     public String      getSeedItemId()  { return seedItemId; }
     public double      getSeedPrice()   { return seedPrice; }
-    public void        setSeedItemId(String id)   { this.seedItemId = id; }
-    public void        setSeedPrice(double price) { this.seedPrice = price; }
+    public void        setSeedItemId(String id)      { this.seedItemId = id; }
+    public void        setSeedPrice(double price)   { this.seedPrice = price; }
+    public void        setMaxHarvest(int max)       { this.maxHarvest = max; }
+    public int         getMaxHarvest()              { return maxHarvest; }
     public boolean     hasSeed()        { return seedItemId != null && !seedItemId.isEmpty(); }
 
     public GradeConfig getGradeConfig(ItemGrade grade) { return gradeConfigs.get(grade); }

@@ -137,6 +137,40 @@ seeds:
 
 
 # ======================================================
+#   수확량 기반 가격 변동 보정 (yield-adjustment)
+# ======================================================
+# 작물의 최대 수확량(max-harvest)에 따라 price-adjustment 의
+# 판매 시 하락 폭을 자동으로 조정합니다.
+# 수확량이 많을수록(고가치 작물일수록) 하락폭이 작아집니다.
+#
+# enabled          : true 면 보정 활성화 / false 면 모든 작물에 동일 범위 적용
+# base-max-harvest : 보정 기준이 되는 최대 수확량 (고추 기준 = 4)
+#                   이 값과 작물의 max-harvest 의 차이만큼 보정됩니다.
+# per-harvest-step : 수확량 1 증가당 min-percent 감소량 (max-percent 는 2배 감소)
+#                   예) step=0.15, base=4, 작물max=8 이면
+#                       normal 기준: min 1.0→0.4, max 3.0→1.8
+yield-adjustment:
+  enabled: true
+  base-max-harvest: 4
+  per-harvest-step: 0.15
+
+
+# ======================================================
+#   보이지 않는 손 (invisible-hand)
+# ======================================================
+# 시장 붕괴 발생 시 일정 확률로 "보이지 않는 손"이 발동합니다.
+# 발동 시 모든 작물의 모든 등급 가격이
+# 기준가(base-price) × 50% ~ 최고가(max-price) 사이에서 무작위로 재조정됩니다.
+# 서버 전체에 발동 메시지가 브로드캐스트됩니다.
+#
+# enabled    : true 면 기능 활성화 / false 면 비활성화
+# chance-pct : 시장 붕괴 1회 발생 시 발동 확률 (%)
+invisible-hand:
+  enabled: true
+  chance-pct: 10
+
+
+# ======================================================
 #   작물 목록 (crops)
 # ======================================================
 # 시장에 등록된 작물과 각 등급별 아이템·가격을 설정합니다.
@@ -168,6 +202,7 @@ crops:
     display-name: "§d토마토"
     icon: APPLE
     seed-id: "customcrops:tomato_seeds"
+    max-harvest: 8
     normal:
       item-id: "TOMATO"
       mmoitems-type: "COOKINGITEM"
@@ -189,6 +224,7 @@ crops:
     display-name: "§d옥수수"
     icon: WHEAT
     seed-id: "customcrops:corn_seeds"
+    max-harvest: 3
     normal:
       item-id: "CORN"
       mmoitems-type: "COOKINGITEM"
@@ -210,6 +246,7 @@ crops:
     display-name: "§d홉"
     icon: VINE
     seed-id: "customcrops:hop_seeds"
+    max-harvest: 7
     normal:
       item-id: "HOP"
       mmoitems-type: "COOKINGITEM"
@@ -231,6 +268,7 @@ crops:
     display-name: "§d포도"
     icon: PURPLE_DYE
     seed-id: "customcrops:grape_seeds"
+    max-harvest: 5
     normal:
       item-id: "GRAPE"
       mmoitems-type: "COOKINGITEM"
@@ -252,6 +290,7 @@ crops:
     display-name: "§d드래곤 후르츠"
     icon: MAGENTA_DYE
     seed-id: "customcrops:pitaya_seeds"
+    max-harvest: 6
     normal:
       item-id: "PITAYA"
       mmoitems-type: "COOKINGITEM"
@@ -273,6 +312,7 @@ crops:
     display-name: "§d청경채"
     icon: CACTUS
     seed-id: "customcrops:chinese_cabbage_seeds"
+    max-harvest: 2
     normal:
       item-id: "PAKCHOI"
       mmoitems-type: "COOKINGITEM"
@@ -294,6 +334,7 @@ crops:
     display-name: "§d고추"
     icon: BLAZE_ROD
     seed-id: "customcrops:pepper_seeds"
+    max-harvest: 4          # 수확량 보정 기준 작물
     normal:
       item-id: "PEPPER"
       mmoitems-type: "COOKINGITEM"
@@ -315,6 +356,7 @@ crops:
     display-name: "§d마늘"
     icon: SUGAR
     seed-id: "customcrops:garlic_seeds"
+    max-harvest: 3
     normal:
       item-id: "GARLIC"
       mmoitems-type: "COOKINGITEM"
@@ -336,6 +378,7 @@ crops:
     display-name: "§d가지"
     icon: CHORUS_FRUIT
     seed-id: "customcrops:eggplant_seeds"
+    max-harvest: 4
     normal:
       item-id: "EGGPLANT"
       mmoitems-type: "COOKINGITEM"
@@ -357,6 +400,7 @@ crops:
     display-name: "§d파인애플"
     icon: HONEYCOMB
     seed-id: "customcrops:pineapple_seeds"
+    max-harvest: 5
     normal:
       item-id: "PINEAPPLE"
       mmoitems-type: "COOKINGITEM"
@@ -378,6 +422,7 @@ crops:
     display-name: "§a양배추"
     icon: LIME_WOOL
     seed-id: "customcrops:cabbage_seeds"
+    max-harvest: 2
     normal:
       item-id: "CABBAGE"
       mmoitems-type: "COOKINGITEM"

@@ -12,6 +12,8 @@
 - **3단계 등급** — 일반 / 은 / 금 등급별 독립 가격 운영
 - **묶음 판매/구매** — 등급별·씨앗별 묶음 수량을 config에서 자유롭게 설정
 - **시장 붕괴** — 고가 구간에서 판매 시 확률적으로 가격 폭락, 일정 시간 후 자동 복구
+- **보이지 않는 손** — 시장 붕괴 시 확률적으로 모든 작물 가격을 무작위 재조정
+- **수확량 기반 가격 보정** — 최대 수확량이 많은 작물일수록 판매 시 하락폭 감소
 - **세금 시스템** — 기본 세율 / 권한 보유자 감면 세율 지원
 - **씨앗 상점** — 수량 선택형 씨앗 구매 GUI 지원
 - **페이지네이션** — 페이지당 28개, 초과 시 이전/다음 페이지 버튼 자동 생성
@@ -128,11 +130,36 @@ price-adjustment:
   silver:  { min-percent: 7.0,  max-percent: 15.0 }
   gold:    { min-percent: 10.0, max-percent: 75.0 }
 
+# 수확량 기반 가격 보정 — 수확량이 많은 작물일수록 하락폭 감소
+# base-max-harvest 기준(고추=4)보다 수확량이 1 많아질 때마다
+# min-percent 는 step 만큼, max-percent 는 step×2 만큼 줄어듭니다.
+yield-adjustment:
+  enabled: true
+  base-max-harvest: 4     # 기준 작물의 최대 수확량 (고추 기준)
+  per-harvest-step: 0.15  # 수확량 1당 min 감소량 (max 는 2배 감소)
+
+# 보이지 않는 손 — 시장 붕괴 시 확률적으로 모든 작물 가격 재조정
+invisible-hand:
+  enabled: true
+  chance-pct: 10          # 시장 붕괴 1회당 발동 확률 (%)
+
 # 세금
 tax:
   default-rate: 10.0
   reduced-rate: 5.0
   reduced-permission: "권한.노드"
+```
+
+각 작물에 `max-harvest` 를 추가하면 수확량 보정이 적용됩니다.
+
+```yaml
+crops:
+  tomato:
+    max-harvest: 8   # 토마토 최대 수확량 8개 → 고추(4) 대비 +4 → 하락폭 감소
+    ...
+  pepper:
+    max-harvest: 4   # 기준 작물 (보정 없음)
+    ...
 ```
 
 > 각 항목에 대한 상세 설명은 config.yml 내 주석을 참고하세요.

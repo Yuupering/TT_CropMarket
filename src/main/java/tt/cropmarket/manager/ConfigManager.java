@@ -49,6 +49,15 @@ public class ConfigManager {
     private double taxReducedRate;
     private String taxReducedPermission;
 
+    // 수확량 기반 가격 보정
+    private boolean yieldAdjustmentEnabled;
+    private int     yieldBaseMaxHarvest;
+    private double  yieldPerHarvestStep;
+
+    // 보이지 않는 손
+    private boolean invisibleHandEnabled;
+    private double  invisibleHandChancePct;
+
     public ConfigManager(CropMarketPlugin plugin) {
         this.plugin = plugin;
         reload();
@@ -103,6 +112,13 @@ public class ConfigManager {
         taxReducedRate       = cfg.getDouble("tax.reduced-rate", 5.0);
         taxReducedPermission = cfg.getString("tax.reduced-permission", "");
 
+        yieldAdjustmentEnabled = cfg.getBoolean("yield-adjustment.enabled", false);
+        yieldBaseMaxHarvest    = cfg.getInt("yield-adjustment.base-max-harvest", 4);
+        yieldPerHarvestStep    = cfg.getDouble("yield-adjustment.per-harvest-step", 0.15);
+
+        invisibleHandEnabled   = cfg.getBoolean("invisible-hand.enabled", false);
+        invisibleHandChancePct = cfg.getDouble("invisible-hand.chance-pct", 10.0);
+
         ConfigurationSection cropsSection = cfg.getConfigurationSection("crops");
         if (cropsSection == null) return;
 
@@ -123,6 +139,10 @@ public class ConfigManager {
             if (seedId != null) {
                 entry.setSeedItemId(seedId);
                 entry.setSeedPrice(cs.getDouble("seed-price", seedDefaultPrice));
+            }
+
+            if (cs.contains("max-harvest")) {
+                entry.setMaxHarvest(cs.getInt("max-harvest", 0));
             }
 
             crops.add(entry);
@@ -186,6 +206,24 @@ public class ConfigManager {
         };
     }
 
+    /**
+     * 수확량 보정 적용 하락 범위 [min%, max%]
+     * maxHarvest <= 0 이거나 기능 비활성화 시 기본 범위 반환
+     */
+    public double[] getAdjustmentRange(ItemGrade grade, int maxHarvest) {
+        double[] base = getAdjustmentRange(grade);
+        if (!yieldAdjustmentEnabled || maxHarvest <= 0) return base;
+
+        int diff = maxHarvest - yieldBaseMaxHarvest;
+        if (diff == 0) return base;
+
+        double minAdj = Math.round((base[0] - diff * yieldPerHarvestStep) * 100.0) / 100.0;
+        double maxAdj = Math.round((base[1] - diff * yieldPerHarvestStep * 2.0) * 100.0) / 100.0;
+        minAdj = Math.max(0.1, minAdj);
+        maxAdj = Math.max(minAdj + 0.1, maxAdj);
+        return new double[]{minAdj, maxAdj};
+    }
+
     /** 등급별 크래시 설정 [thresholdPct, minChancePct, maxChancePct] */
     public double[] getCrashSettings(ItemGrade grade) {
         return switch (grade) {
@@ -219,4 +257,8 @@ public class ConfigManager {
     public double getTaxDefaultRate()       { return taxDefaultRate; }
     public double getTaxReducedRate()       { return taxReducedRate; }
     public String getTaxReducedPermission() { return taxReducedPermission; }
+
+    public boolean isYieldAdjustmentEnabled() { return yieldAdjustmentEnabled; }
+    public boolean isInvisibleHandEnabled()   { return invisibleHandEnabled; }
+    public double  getInvisibleHandChancePct(){ return invisibleHandChancePct; }
 }

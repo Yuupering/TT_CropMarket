@@ -65,8 +65,8 @@ public class MarketManager {
         if (data.getCurrentPrice() <= 0) {
             newPrice = 0.0;
         } else {
-            // 가격 하락 적용
-            double[] range = cfg.getAdjustmentRange(grade);
+            // 가격 하락 적용 (수확량 보정 포함)
+            double[] range = cfg.getAdjustmentRange(grade, crop.getMaxHarvest());
             decreasePercent = Math.round((range[0] + random.nextDouble() * (range[1] - range[0])) * 10.0) / 10.0;
             newPrice = data.getCurrentPrice() * (1.0 - decreasePercent / 100.0);
             newPrice = Math.max(newPrice, config.getMinPrice());
@@ -120,11 +120,41 @@ public class MarketManager {
                 crashChancePct
             );
             scheduleCrashRecovery(crop, grade, config, data);
+
+            // 보이지 않는 손
+            if (cfg.isInvisibleHandEnabled()) {
+                double chance = cfg.getInvisibleHandChancePct() / 100.0;
+                if (random.nextDouble() < chance) {
+                    triggerInvisibleHand();
+                }
+            }
         }
 
         plugin.getDataManager().save();
 
         return SellResult.success(required, grossPayment, taxAmount, netPayment, decreasePercent, crashed);
+    }
+
+    private void triggerInvisibleHand() {
+        ConfigManager cfg = plugin.getConfigManager();
+        for (CropEntry c : cfg.getCrops()) {
+            for (ItemGrade g : ItemGrade.values()) {
+                GradeConfig gc = c.getGradeConfig(g);
+                GradeData   gd = c.getGradeData(g);
+                if (gc == null || gd == null) continue;
+
+                double minPrice = gc.getBasePrice() * 0.5;
+                double maxPrice = gc.getMaxPrice();
+                double newPrice = minPrice + random.nextDouble() * (maxPrice - minPrice);
+                newPrice = Math.max(gc.getMinPrice(), Math.min(newPrice, maxPrice));
+                gd.loadPrice(newPrice);
+            }
+        }
+        plugin.getDataManager().save();
+        plugin.getServer().broadcastMessage(
+            "§6[보이지 않는 손] §r시장에 보이지 않는 손이 움직입니다! §e모든 작물 가격이 재조정되었습니다."
+        );
+        plugin.getMarketLogger().logInvisibleHand();
     }
 
     private void scheduleCrashRecovery(CropEntry crop, ItemGrade grade,

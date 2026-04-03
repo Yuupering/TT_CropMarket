@@ -60,6 +60,11 @@ public class MarketLogger {
         ));
     }
 
+    /** 보이지 않는 손 발동 이벤트 */
+    public void logInvisibleHand() {
+        log("[보이지않는손] 모든 작물 가격이 기준가×50% ~ 최고가 사이로 무작위 재조정되었습니다.");
+    }
+
     /** 일반 정보 */
     public void logInfo(String message) {
         log("[INFO] " + message);
