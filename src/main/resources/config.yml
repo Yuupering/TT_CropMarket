@@ -168,9 +168,6 @@ yield-adjustment:
 invisible-hand:
   enabled: true
   chance-pct: 10
-  # 가격 재조정 시 하한선 = 기준가(base-price) × 이 배율
-  # 0.5 = 기준가의 50% / 1.0 = 기준가 그대로
-  min-price-multiplier: 0.5
 
 
 # ======================================================

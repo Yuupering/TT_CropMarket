@@ -64,7 +64,6 @@ public class ConfigManager {
     // 보이지 않는 손
     private boolean invisibleHandEnabled;
     private double  invisibleHandChancePct;
-    private double  invisibleHandMinMultiplier;
 
     public ConfigManager(CropMarketPlugin plugin) {
         this.plugin = plugin;
@@ -125,9 +124,8 @@ public class ConfigManager {
         yieldBaseMaxHarvest    = cfg.getInt("yield-adjustment.base-max-harvest", 4);
         yieldPerHarvestStep    = cfg.getDouble("yield-adjustment.per-harvest-step", 0.15);
 
-        invisibleHandEnabled        = cfg.getBoolean("invisible-hand.enabled", false);
-        invisibleHandChancePct      = cfg.getDouble("invisible-hand.chance-pct", 10.0);
-        invisibleHandMinMultiplier  = cfg.getDouble("invisible-hand.min-price-multiplier", 0.5);
+        invisibleHandEnabled   = cfg.getBoolean("invisible-hand.enabled", false);
+        invisibleHandChancePct = cfg.getDouble("invisible-hand.chance-pct", 10.0);
 
         ConfigurationSection cropsSection = cfg.getConfigurationSection("crops");
         if (cropsSection == null) return;
@@ -332,9 +330,8 @@ public class ConfigManager {
     public String getTaxReducedPermission() { return taxReducedPermission; }
 
     public boolean isYieldAdjustmentEnabled() { return yieldAdjustmentEnabled; }
-    public boolean isInvisibleHandEnabled()          { return invisibleHandEnabled; }
-    public double  getInvisibleHandChancePct()       { return invisibleHandChancePct; }
-    public double  getInvisibleHandMinMultiplier()   { return invisibleHandMinMultiplier; }
+    public boolean isInvisibleHandEnabled()   { return invisibleHandEnabled; }
+    public double  getInvisibleHandChancePct(){ return invisibleHandChancePct; }
 
     public List<GeneralShopEntry> getGeneralShopItems()    { return Collections.unmodifiableList(generalShopItems); }
     public boolean isGeneralShopEnabled()                  { return generalShopEnabled; }
